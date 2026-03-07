@@ -179,7 +179,7 @@ export default function AdminPage() {
                 <span className="admin-product-name" style={{ flex: 1, fontWeight: 600, minWidth: 0 }}>{p.name}</span>
                 <span style={{ fontSize: "0.9rem", color: "#737373", minWidth: "4rem" }}>Stock: {p.stock}</span>
                 <span className="admin-product-actions" style={{ display: "flex", gap: "0.35rem", alignItems: "center" }}>
-                  <button type="button" className="admin-icon-btn" onClick={() => openEditModal(p)} title="Edit product" aria-label="Edit product">
+                  <button type="button" className="admin-icon-btn admin-icon-btn-edit" onClick={() => openEditModal(p)} title="Edit product" aria-label="Edit product">
                     <IconEdit />
                   </button>
                   <button type="button" className="admin-icon-btn admin-icon-btn-danger" disabled={deletingId === p.id} onClick={() => deleteProduct(p.id)} title="Delete product" aria-label="Delete product">
