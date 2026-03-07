@@ -32,6 +32,7 @@ type ProductModalMode = "add" | Product;
 
 export default function AdminPage() {
   const [admin, setAdmin] = useState<boolean | null>(null);
+  const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [loginError, setLoginError] = useState("");
   const [products, setProducts] = useState<Product[]>([]);
@@ -59,7 +60,7 @@ export default function AdminPage() {
     const res = await fetch("/api/auth/login", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ password }),
+      body: JSON.stringify({ username, password }),
     });
     const data = await res.json();
     if (!res.ok) {
@@ -72,6 +73,7 @@ export default function AdminPage() {
   const handleLogout = async () => {
     await fetch("/api/auth/logout", { method: "POST" });
     setAdmin(false);
+    setUsername("");
     setPassword("");
   };
 
@@ -113,14 +115,26 @@ export default function AdminPage() {
           <form onSubmit={handleLogin}>
             {loginError && <div className="alert alert-error">{loginError}</div>}
             <div className="form-group">
+              <label htmlFor="username">Username</label>
+              <input
+                id="username"
+                type="text"
+                value={username}
+                onChange={(e) => setUsername(e.target.value)}
+                placeholder="Admin username"
+                autoComplete="username"
+                autoFocus
+              />
+            </div>
+            <div className="form-group">
               <label htmlFor="password">Password</label>
               <input
                 id="password"
                 type="password"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                placeholder="Admin password"
-                autoFocus
+                placeholder="Password"
+                autoComplete="current-password"
               />
             </div>
             <button type="submit" className="btn btn-primary" style={{ width: "100%" }}>
