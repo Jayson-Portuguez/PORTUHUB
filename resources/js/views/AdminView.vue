@@ -1,124 +1,107 @@
 <template>
-  <div>
-    <h1 class="text-2xl font-bold mb-6">Admin</h1>
+  <div class="admin-layout">
     <template v-if="admin === null">
-      <div class="text-gray-500">Checking...</div>
+      <div style="color: #737373;">Checking...</div>
     </template>
     <template v-else-if="!admin">
-      <div class="max-w-md bg-white border border-gray-200 rounded-lg shadow p-6">
-        <h2 class="text-lg font-semibold mb-4">Admin login</h2>
-        <div v-if="loginError" class="mb-4 p-3 bg-red-50 border border-red-200 rounded text-red-700 text-sm">
-          {{ loginError }}
-        </div>
-        <form @submit.prevent="handleLogin" class="space-y-4">
-          <div>
-            <label class="block text-sm font-medium text-gray-700 mb-1">Username</label>
-            <input
-              v-model="username"
-              type="text"
-              class="w-full border border-gray-300 rounded-lg px-3 py-2"
-              required
-            />
+      <div class="login-box">
+        <h1>Admin login</h1>
+        <div v-if="loginError" class="alert alert-error">{{ loginError }}</div>
+        <form @submit.prevent="handleLogin">
+          <div class="form-group">
+            <label>Username</label>
+            <input v-model="username" type="text" required />
           </div>
-          <div>
-            <label class="block text-sm font-medium text-gray-700 mb-1">Password</label>
-            <input
-              v-model="password"
-              type="password"
-              class="w-full border border-gray-300 rounded-lg px-3 py-2"
-              required
-            />
+          <div class="form-group">
+            <label>Password</label>
+            <input v-model="password" type="password" required />
           </div>
-          <button
-            type="submit"
-            class="w-full py-2 bg-green-600 text-white font-medium rounded-lg hover:bg-green-700"
-          >
-            Log in
-          </button>
+          <button type="submit" class="btn btn-primary" style="width: 100%;">Log in</button>
         </form>
       </div>
     </template>
     <template v-else>
-      <div class="flex justify-end mb-4">
-        <button
-          @click="handleLogout"
-          class="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50"
-        >
-          Logout
-        </button>
+      <div class="admin-top-header">
+        <div class="admin-top-header-inner">
+          <h1>Admin</h1>
+          <div class="admin-top-right">
+            <button type="button" @click="handleLogout" class="btn btn-ghost">Logout</button>
+            <button type="button" @click="openAdd" class="btn btn-primary">Add product</button>
+          </div>
+        </div>
       </div>
-      <div class="mb-4">
-        <button
-          @click="openAdd"
-          class="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700"
-        >
-          Add product
-        </button>
-      </div>
-      <div class="border border-gray-200 rounded-lg overflow-hidden bg-white">
-        <table class="w-full">
-          <thead class="bg-gray-50 border-b border-gray-200">
+      <div class="admin-table-wrap">
+        <table>
+          <thead>
             <tr>
-              <th class="text-left p-3 font-medium">Name</th>
-              <th class="text-left p-3 font-medium">Price</th>
-              <th class="text-left p-3 font-medium">Stock</th>
-              <th class="p-3"></th>
+              <th>Name</th>
+              <th>Price</th>
+              <th>Stock</th>
+              <th></th>
             </tr>
           </thead>
           <tbody>
-            <tr
-              v-for="p in products"
-              :key="p.id"
-              class="border-b border-gray-100 hover:bg-gray-50"
-            >
-              <td class="p-3">{{ p.name }}</td>
-              <td class="p-3">₱{{ Number(p.price).toLocaleString() }}</td>
-              <td class="p-3">{{ p.stock }}</td>
-              <td class="p-3 flex gap-2">
-                <button
-                  @click="openEdit(p)"
-                  class="text-blue-600 hover:underline"
-                >
-                  Edit
+            <tr v-for="p in products" :key="p.id">
+              <td>{{ p.name }}</td>
+              <td>₱{{ Number(p.price).toLocaleString() }}</td>
+              <td>{{ p.stock }}</td>
+              <td>
+                <button type="button" @click="openEdit(p)" class="admin-icon-btn admin-icon-btn-edit" title="Edit" aria-label="Edit">
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" /><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" /></svg>
                 </button>
-                <button
-                  @click="deleteProduct(p.id)"
-                  class="text-red-600 hover:underline"
-                >
-                  Delete
+                <button type="button" @click="deleteProduct(p.id)" class="admin-icon-btn admin-icon-btn-danger" title="Delete" aria-label="Delete">
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6" /><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" /><line x1="10" y1="11" x2="10" y2="17" /><line x1="14" y1="11" x2="14" y2="17" /></svg>
                 </button>
               </td>
             </tr>
           </tbody>
         </table>
       </div>
-      <div
-        v-if="modalProduct !== null"
-        class="fixed inset-0 bg-black/50 flex items-center justify-center z-10"
-        @click.self="modalProduct = null"
-      >
-        <div class="bg-white rounded-lg shadow-xl max-w-lg w-full mx-4 p-6">
-          <h3 class="text-lg font-semibold mb-4">{{ isAdd ? 'Add product' : 'Edit product' }}</h3>
-          <form @submit.prevent="saveProduct" class="space-y-4">
-            <div>
-              <label class="block text-sm font-medium mb-1">Name</label>
-              <input v-model="form.name" class="w-full border rounded px-3 py-2" required />
+      <div v-if="modalProduct !== null" class="admin-modal-overlay" @click.self="modalProduct = null">
+        <div class="admin-modal">
+          <div class="admin-modal-header">
+            <h3 style="margin: 0; font-size: 1.1rem;">{{ isAdd ? 'Add product' : 'Edit product' }}</h3>
+            <button type="button" class="admin-modal-close" @click="modalProduct = null" aria-label="Close">×</button>
+          </div>
+          <form @submit.prevent="saveProduct">
+            <div class="admin-modal-body">
+              <div class="form-group">
+                <label>Name</label>
+                <input v-model="form.name" required />
+              </div>
+              <div class="form-group">
+                <label>Description</label>
+                <textarea v-model="form.description" rows="4"></textarea>
+              </div>
+              <div class="form-group">
+                <label>Price (₱)</label>
+                <input v-model.number="form.price" type="number" step="0.01" min="0" required />
+              </div>
+              <div class="form-group">
+                <label>Stock</label>
+                <input v-model.number="form.stock" type="number" min="0" class="stock-input" required />
+              </div>
+              <div class="form-group">
+                <label>Images</label>
+                <div class="image-upload-area">
+                  <div v-for="(url, idx) in form.imageUrls" :key="'url-' + idx" class="image-preview-wrap">
+                    <img :src="url" :alt="'Image ' + (idx + 1)" class="image-preview-thumb" />
+                    <button type="button" class="image-preview-remove" @click="form.imageUrls.splice(idx, 1)" aria-label="Remove image">×</button>
+                  </div>
+                  <div v-for="(file, idx) in imageFileList" :key="'file-' + idx" class="image-preview-wrap">
+                    <img :src="filePreview(file)" :alt="'New ' + (idx + 1)" class="image-preview-thumb" />
+                    <button type="button" class="image-preview-remove" @click="imageFileList.splice(idx, 1)" aria-label="Remove">×</button>
+                  </div>
+                  <label class="image-upload-add">
+                    <input type="file" accept="image/jpeg,image/png,image/gif,image/webp" multiple @change="onImageSelect" />
+                    <span>+ Add images</span>
+                  </label>
+                </div>
+              </div>
             </div>
-            <div>
-              <label class="block text-sm font-medium mb-1">Description</label>
-              <textarea v-model="form.description" class="w-full border rounded px-3 py-2" rows="3"></textarea>
-            </div>
-            <div>
-              <label class="block text-sm font-medium mb-1">Price (₱)</label>
-              <input v-model.number="form.price" type="number" step="0.01" min="0" class="w-full border rounded px-3 py-2" required />
-            </div>
-            <div>
-              <label class="block text-sm font-medium mb-1">Stock</label>
-              <input v-model.number="form.stock" type="number" min="0" class="w-full border rounded px-3 py-2" required />
-            </div>
-            <div class="flex gap-2 justify-end pt-4">
-              <button type="button" @click="modalProduct = null" class="px-4 py-2 border rounded-lg">Cancel</button>
-              <button type="submit" class="px-4 py-2 bg-green-600 text-white rounded-lg">Save</button>
+            <div class="admin-modal-footer">
+              <button type="button" @click="modalProduct = null" class="btn btn-ghost">Cancel</button>
+              <button type="submit" class="btn btn-primary">Save</button>
             </div>
           </form>
         </div>
@@ -136,13 +119,32 @@ const password = ref('');
 const loginError = ref('');
 const products = ref([]);
 const modalProduct = ref(null);
-const form = ref({ name: '', description: '', price: 0, stock: 0 });
+const form = ref({ name: '', description: '', price: 0, stock: 0, imageUrls: [] });
+const imageFileList = ref([]);
+
+const ADMIN_TOKEN_KEY = 'admin_session_token';
+
+function authHeaders() {
+  const headers = { };
+  const token = sessionStorage.getItem(ADMIN_TOKEN_KEY);
+  if (token) headers['Authorization'] = `Bearer ${token}`;
+  return headers;
+}
 
 const isAdd = computed(() => modalProduct.value === 'add');
 
+function filePreview(file) {
+  return file && file instanceof File ? URL.createObjectURL(file) : '';
+}
+function onImageSelect(e) {
+  const files = e.target.files;
+  if (files && files.length) imageFileList.value.push(...Array.from(files));
+  e.target.value = '';
+}
+
 async function checkAdmin() {
   try {
-    const res = await fetch('/api/auth/me', { credentials: 'include' });
+    const res = await fetch('/api/auth/me', { credentials: 'include', headers: authHeaders() });
     const data = await res.json().catch(() => ({}));
     admin.value = data.admin === true;
   } catch {
@@ -152,7 +154,7 @@ async function checkAdmin() {
 
 async function loadProducts() {
   try {
-    const res = await fetch('/api/products', { credentials: 'include' });
+    const res = await fetch('/api/products', { credentials: 'include', headers: authHeaders() });
     const data = await res.json();
     products.value = Array.isArray(data) ? data : [];
   } catch {
@@ -177,6 +179,7 @@ async function handleLogin() {
       loginError.value = data.error || 'Login failed';
       return;
     }
+    if (data.token) sessionStorage.setItem(ADMIN_TOKEN_KEY, data.token);
     admin.value = true;
   } catch {
     loginError.value = 'Network error. Is the server running?';
@@ -185,8 +188,9 @@ async function handleLogin() {
 
 async function handleLogout() {
   try {
-    await fetch('/api/auth/logout', { method: 'POST', credentials: 'include' });
+    await fetch('/api/auth/logout', { method: 'POST', credentials: 'include', headers: authHeaders() });
   } catch {}
+  sessionStorage.removeItem(ADMIN_TOKEN_KEY);
   admin.value = false;
   username.value = '';
   password.value = '';
@@ -194,7 +198,8 @@ async function handleLogout() {
 
 function openAdd() {
   modalProduct.value = 'add';
-  form.value = { name: '', description: '', price: 0, stock: 0 };
+  form.value = { name: '', description: '', price: 0, stock: 0, imageUrls: [] };
+  imageFileList.value = [];
 }
 
 function openEdit(p) {
@@ -204,24 +209,40 @@ function openEdit(p) {
     description: p.description || '',
     price: p.price,
     stock: p.stock,
+    imageUrls: [...(p.imageUrls || [])],
   };
+  imageFileList.value = [];
 }
 
 async function saveProduct() {
   const isAddMode = modalProduct.value === 'add';
+  let imageUrls = [...form.value.imageUrls];
+  if (imageFileList.value.length > 0) {
+    const fd = new FormData();
+    imageFileList.value.forEach((file) => fd.append('images[]', file));
+    try {
+      const up = await fetch('/api/upload', { method: 'POST', credentials: 'include', headers: authHeaders(), body: fd });
+      const upData = await up.json().catch(() => ({}));
+      if (up.ok && Array.isArray(upData.urls)) imageUrls = imageUrls.concat(upData.urls);
+    } catch {
+      alert('Image upload failed.');
+      return;
+    }
+  }
+  if (imageUrls.length === 0) imageUrls = ['/placeholder.svg'];
   const url = isAddMode ? '/api/products' : `/api/products/${modalProduct.value.id}`;
   const method = isAddMode ? 'POST' : 'PATCH';
   try {
     const res = await fetch(url, {
       method,
-      headers: { 'Content-Type': 'application/json' },
+      headers: { 'Content-Type': 'application/json', ...authHeaders() },
       credentials: 'include',
       body: JSON.stringify({
         name: form.value.name,
         description: form.value.description,
         price: form.value.price,
         stock: form.value.stock,
-        imageUrls: ['/placeholder.png'],
+        imageUrls,
       }),
     });
     const data = await res.json().catch(() => ({}));
@@ -237,9 +258,9 @@ async function saveProduct() {
 }
 
 async function deleteProduct(id) {
-  if (!confirm('Delete this product?')) return;
+  if (!confirm('Delete this product? This cannot be undone.')) return;
   try {
-    const res = await fetch(`/api/products/${id}`, { method: 'DELETE', credentials: 'include' });
+    const res = await fetch(`/api/products/${id}`, { method: 'DELETE', credentials: 'include', headers: authHeaders() });
     if (res.ok) products.value = products.value.filter((p) => p.id !== id);
   } catch {}
 }

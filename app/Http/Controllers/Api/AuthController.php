@@ -16,9 +16,22 @@ class AuthController extends Controller
     private const COOKIE_NAME = 'admin_session';
     private const SESSION_DAYS = 7;
 
-    public function me(): JsonResponse
+    private function token(): ?string
     {
         $token = request()->cookie(self::COOKIE_NAME);
+        if ($token) {
+            return $token;
+        }
+        $header = request()->header('Authorization');
+        if ($header && str_starts_with($header, 'Bearer ')) {
+            return substr($header, 7);
+        }
+        return null;
+    }
+
+    public function me(): JsonResponse
+    {
+        $token = $this->token();
         if (! $token) {
             return response()->json(['admin' => false]);
         }
@@ -56,12 +69,12 @@ class AuthController extends Controller
             false,
             'lax'
         );
-        return response()->json(['success' => true])->cookie($cookie);
+        return response()->json(['success' => true, 'token' => $token])->cookie($cookie);
     }
 
     public function logout(Request $request): JsonResponse
     {
-        $token = $request->cookie(self::COOKIE_NAME);
+        $token = $this->token();
         if ($token) {
             AdminSession::where('token', $token)->delete();
         }

@@ -1,31 +1,57 @@
 <template>
-  <div>
-    <h1 class="text-2xl font-bold mb-6">Products</h1>
-    <div v-if="loading" class="text-gray-500">Loading...</div>
-    <div v-else class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+  <div class="container" style="padding-bottom: 3rem;">
+    <h1 class="section-title">Products</h1>
+    <div v-if="loading" style="color: #737373;">Loading...</div>
+    <div v-else class="card-grid">
       <div
         v-for="p in products"
         :key="p.id"
-        class="border border-gray-200 rounded-lg overflow-hidden bg-white hover:shadow-md cursor-pointer"
-        :class="{ 'ring-2 ring-green-500': selectedId === p.id }"
-        @click="selectedId = p.id"
+        class="product-card product-card-clickable"
+        @click="openZoom(p)"
       >
         <img
-          :src="(p.imageUrls && p.imageUrls[0]) || '/placeholder.png'"
+          :src="(p.imageUrls && p.imageUrls[0]) || '/placeholder.svg'"
           :alt="p.name"
-          class="w-full h-48 object-cover"
         />
-        <div class="p-3">
-          <h3 class="font-medium text-gray-900">{{ p.name }}</h3>
-          <p class="text-green-600 font-semibold">₱{{ Number(p.price).toLocaleString() }}</p>
+        <div class="product-card-body">
+          <h3>{{ p.name }}</h3>
+          <p class="desc">{{ p.description || '—' }}</p>
+          <p class="price">₱{{ Number(p.price).toLocaleString() }}</p>
+          <p class="stock">Stock: {{ p.stock }}</p>
         </div>
       </div>
     </div>
-    <div v-if="selectedProduct" class="mt-8 p-6 bg-white border border-gray-200 rounded-lg">
-      <h2 class="text-xl font-semibold mb-2">{{ selectedProduct.name }}</h2>
-      <p class="text-gray-600 mb-4">{{ selectedProduct.description }}</p>
-      <p class="text-green-600 font-bold text-lg">₱{{ Number(selectedProduct.price).toLocaleString() }}</p>
-      <p class="text-sm text-gray-500">Stock: {{ selectedProduct.stock }}</p>
+    <div v-if="zoomProduct" class="product-zoom-overlay" @click.self="zoomProduct = null">
+      <div class="product-zoom-modal">
+        <button type="button" class="product-zoom-close" @click="zoomProduct = null" aria-label="Close">×</button>
+        <div class="product-zoom-content">
+          <div class="product-zoom-images">
+            <template v-if="zoomImages.length > 1">
+              <button type="button" class="product-carousel-btn product-carousel-prev" @click="zoomIndex = (zoomIndex - 1 + zoomImages.length) % zoomImages.length" aria-label="Previous">‹</button>
+              <img :src="zoomImages[zoomIndex]" :alt="zoomProduct.name" class="product-zoom-img" />
+              <button type="button" class="product-carousel-btn product-carousel-next" @click="zoomIndex = (zoomIndex + 1) % zoomImages.length" aria-label="Next">›</button>
+              <div class="product-carousel-dots">
+                <button
+                  v-for="(_, i) in zoomImages"
+                  :key="i"
+                  type="button"
+                  class="product-carousel-dot"
+                  :class="{ active: i === zoomIndex }"
+                  :aria-label="'Image ' + (i + 1)"
+                  @click="zoomIndex = i"
+                />
+              </div>
+            </template>
+            <img v-else :src="zoomImages[0] || '/placeholder.svg'" :alt="zoomProduct.name" class="product-zoom-img" />
+          </div>
+          <div class="product-zoom-info">
+            <h2 class="product-zoom-name">{{ zoomProduct.name }}</h2>
+            <p class="product-zoom-price">₱{{ Number(zoomProduct.price).toLocaleString() }}</p>
+            <p class="product-zoom-stock">Stock: {{ zoomProduct.stock }}</p>
+            <p class="product-zoom-desc">{{ zoomProduct.description || 'No description.' }}</p>
+          </div>
+        </div>
+      </div>
     </div>
   </div>
 </template>
@@ -37,7 +63,20 @@ import { useRoute } from 'vue-router';
 const route = useRoute();
 const products = ref([]);
 const loading = ref(true);
-const selectedId = ref('');
+const zoomProduct = ref(null);
+const zoomIndex = ref(0);
+
+const zoomImages = computed(() => {
+  if (!zoomProduct.value || !zoomProduct.value.imageUrls || !zoomProduct.value.imageUrls.length) {
+    return ['/placeholder.svg'];
+  }
+  return zoomProduct.value.imageUrls;
+});
+
+function openZoom(p) {
+  zoomProduct.value = p;
+  zoomIndex.value = 0;
+}
 
 onMounted(async () => {
   try {
@@ -49,12 +88,17 @@ onMounted(async () => {
   } finally {
     loading.value = false;
   }
-  if (route.hash) selectedId.value = route.hash.slice(1);
+  if (route.hash) {
+    const id = route.hash.slice(1);
+    const p = products.value.find((x) => x.id === id);
+    if (p) openZoom(p);
+  }
 });
 
-watch(() => route.hash, (h) => { if (h) selectedId.value = h.slice(1); });
-
-const selectedProduct = computed(() =>
-  products.value.find((p) => p.id === selectedId.value) || null
-);
+watch(() => route.hash, (h) => {
+  if (!h) return;
+  const id = h.slice(1);
+  const p = products.value.find((x) => x.id === id);
+  if (p) openZoom(p);
+});
 </script>

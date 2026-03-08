@@ -10,9 +10,22 @@ use Illuminate\Support\Str;
 
 class ProductController extends Controller
 {
-    private function isAdmin(): bool
+    private function adminToken(): ?string
     {
         $token = request()->cookie('admin_session');
+        if ($token) {
+            return $token;
+        }
+        $header = request()->header('Authorization');
+        if ($header && str_starts_with($header, 'Bearer ')) {
+            return substr($header, 7);
+        }
+        return null;
+    }
+
+    private function isAdmin(): bool
+    {
+        $token = $this->adminToken();
         if (! $token) {
             return false;
         }

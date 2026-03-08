@@ -11,6 +11,8 @@ class AdminSession extends Model
 
     public $timestamps = true;
 
+    protected $fillable = ['admin_user_id', 'token', 'expires_at'];
+
     protected $casts = [
         'expires_at' => 'datetime',
     ];

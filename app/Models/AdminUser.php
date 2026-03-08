@@ -9,6 +9,8 @@ class AdminUser extends Model
 {
     protected $table = 'admin_users';
 
+    protected $fillable = ['username', 'password_hash'];
+
     protected $hidden = ['password_hash'];
 
     public function sessions(): HasMany
