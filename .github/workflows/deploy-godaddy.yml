@@ -1,22 +1,26 @@
-# Deploy Next.js app and use your GoDaddy domain
+# Deploy Next.js site to GitHub Pages and use your GoDaddy domain (portuhub.shop)
 #
-# This workflow deploys to Vercel (supports Next.js, API routes, and custom domains).
-# After deployment, add your GoDaddy domain in Vercel and point GoDaddy DNS to Vercel
-# (see instructions below in the workflow and in DEPLOY-GODADDY.md).
+# GitHub Pages serves static files only. API routes and MySQL will not run here.
+# Point your GoDaddy domain to GitHub Pages: add CNAME in GoDaddy DNS → your-username.github.io
 #
-name: Deploy to production (GoDaddy domain)
+name: Deploy to GitHub Pages (GoDaddy domain)
 
 on:
   push:
     branches: ["main"]
   workflow_dispatch:
 
-env:
-  VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
-  VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: "pages"
+  cancel-in-progress: false
 
 jobs:
-  deploy:
+  build:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
@@ -28,14 +32,36 @@ jobs:
           node-version: "20"
           cache: "npm"
 
+      - name: Setup Pages
+        uses: actions/configure-pages@v5
+        with:
+          static_site_generator: next
+
       - name: Install dependencies
         run: npm ci
 
-      - name: Pull Vercel environment
-        run: npx vercel pull --yes --environment=production --token=${{ secrets.VERCEL_TOKEN }}
+      # GitHub Pages is static-only; API routes are not supported. Hide them so the build succeeds.
+      - name: Stash API routes for static export
+        run: mv app/api app/api.disabled 2>/dev/null || true
 
-      - name: Build project
-        run: npx vercel build --prod --token=${{ secrets.VERCEL_TOKEN }}
+      - name: Build with Next.js (static export)
+        run: npx next build
 
-      - name: Deploy to Vercel
-        run: npx vercel deploy --prebuilt --prod --token=${{ secrets.VERCEL_TOKEN }}
+      - name: Restore API routes
+        run: mv app/api.disabled app/api 2>/dev/null || true
+
+      - name: Upload artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: ./out
+
+  deploy:
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    runs-on: ubuntu-latest
+    needs: build
+    steps:
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
