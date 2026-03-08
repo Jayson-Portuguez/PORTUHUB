@@ -1,70 +1,55 @@
-# PortuHub – Simple Ecommerce
+# PortuHub
 
-A simple ecommerce site with product listing, admin product management, and a landing page carousel of new items. Uses **MySQL** for admin users and products.
+E-commerce app with admin auth and product CRUD. Built with **Laravel 12**, **Vue 3**, and **Tailwind CSS**.
 
-## Prerequisites
+## Requirements
 
+- PHP 8.2+
+- Composer
 - Node.js 18+
-- MySQL 8 (or 5.7+)
+- MySQL
 
 ## Setup
 
-### 1. Create database and tables
+1. **Copy environment and configure database**
+   ```bash
+   cp .env.example .env
+   php artisan key:generate
+   ```
+   Edit `.env`: set `DB_CONNECTION=mysql`, `DB_DATABASE=portuhub`, `DB_USERNAME`, `DB_PASSWORD`. (Laravel uses `DB_*` env vars, not `MYSQL_*`.)
 
-In MySQL, run the schema script:
+2. **Run migrations**
+   ```bash
+   php artisan migrate
+   ```
 
-```bash
-mysql -u root -p < scripts/schema.sql
-```
+3. **Seed admin user**
+   ```bash
+   php artisan db:seed
+   ```
+   Default login: `ADMIN_USERNAME` / `ADMIN_PASSWORD` from `.env` (e.g. `admin` / `@PORTUHUB2026`).
 
-Or open `scripts/schema.sql` in your MySQL client and run it.
+4. **Install frontend dependencies and build**
+   ```bash
+   npm install
+   npm run build
+   ```
+   For development: `npm run dev` (Vite dev server).
 
-### 2. Environment variables
+5. **Run the app**
+   ```bash
+   php artisan serve
+   ```
+   Open http://localhost:8000. For dev assets, run `npm run dev` in another terminal.
 
-Copy `.env.example` to `.env` and set your MySQL credentials:
+## Structure
 
-```
-MYSQL_HOST=localhost
-MYSQL_PORT=3306
-MYSQL_USER=root
-MYSQL_PASSWORD=your_mysql_password
-MYSQL_DATABASE=portuhub
+- **Backend:** Laravel API routes under `/api` (auth: login, logout, me; products: CRUD).
+- **Frontend:** Vue 3 SPA with Vue Router; Tailwind for styles. Single blade view `resources/views/app.blade.php` mounts the Vue app.
+- **Auth:** Cookie-based admin session (`admin_session`). No Laravel Sanctum or Jetstream.
 
-ADMIN_USERNAME=admin
-ADMIN_PASSWORD=@PORTUHUB2026
-```
+## Routes
 
-### 3. Create admin user
-
-Seed the default admin user (username from `ADMIN_USERNAME`, password from `ADMIN_PASSWORD`):
-
-```bash
-npm run db:seed
-```
-
-### 4. Install and run
-
-```bash
-npm install
-npm run dev
-```
-
-Open [http://localhost:3000](http://localhost:3000).
-
-## Admin login
-
-- **URL:** `/admin`
-- **Default after seed:** username `admin`, password `@PORTUHUB2026` (or whatever you set in `.env`).
-
-## Features
-
-- **Landing page** – Hero and a **carousel of newest products** (scroll horizontally).
-- **Products** – `/products` lists all products with image, description, price, and stock.
-- **Add / edit products** – In Admin (after login): add or edit products (images, name, description, price, stock).
-- **Admin** – Login with username + password (stored in MySQL). Sessions stored in database.
-
-## Data
-
-- **Admin users** and **sessions** – MySQL tables `admin_users`, `sessions`.
-- **Products** – MySQL table `products`.
-- **Uploaded images** – Still saved to `public/uploads/`.
+- `/` – Home (new arrivals)
+- `/products` – Product list
+- `/admin` – Admin login and product management

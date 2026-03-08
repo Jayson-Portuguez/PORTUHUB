@@ -1,0 +1,50 @@
+[
+  {
+    "name": "485 VALET",
+    "description": "The Benchmade 485 Valet is a traditional folder backed up by the Benchmade reputation for quality construction and exceptional design",
+    "price": 1500,
+    "imageUrls": [
+      "/uploads/img_1772916982668.jpg",
+      "/uploads/img_1772916982688.jpg"
+    ],
+    "stock": 6,
+    "id": "p_1772916982834_5qugnrr",
+    "createdAt": "2026-03-07T20:56:22.834Z"
+  },
+  {
+    "name": "AUTOCART OD GREEN G10",
+    "description": "Continuing the precedence for speed and style set by the initial 3400 Autocrat®, the 3400BK-1 Autocrat® is our latest addition to the out-the-front platform. Designed with both EDC and tactical enthusiasts in mind, this quick and lightweight OTF's performance matches its good look",
+    "price": 3000,
+    "imageUrls": [
+      "/uploads/img_1772919010903.jpg"
+    ],
+    "stock": 15,
+    "id": "p_1772919010993_qapq3io",
+    "createdAt": "2026-03-07T21:30:10.993Z"
+  },
+  {
+    "name": "Automatic Switch Blade BENCHMADE Pocket Knife",
+    "description": "dasdasdasd",
+    "price": 2500,
+    "imageUrls": [
+      "/uploads/img_1772919168030.jpg",
+      "/uploads/img_1772919168046.jpg",
+      "/uploads/img_1772919168064.jpg",
+      "/uploads/img_1772919168080.jpg"
+    ],
+    "stock": 11,
+    "id": "p_1772919168091_qk8fcc3",
+    "createdAt": "2026-03-07T21:32:48.091Z"
+  },
+  {
+    "name": "BENCH MADE 391BK SOCP FOLDER",
+    "description": "asdasd",
+    "price": 3333,
+    "imageUrls": [
+      "/uploads/img_1772919194360.jpg"
+    ],
+    "stock": 123,
+    "id": "p_1772919194373_vvncx2u",
+    "createdAt": "2026-03-07T21:33:14.373Z"
+  }
+]
