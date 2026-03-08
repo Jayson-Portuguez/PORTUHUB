@@ -40,15 +40,12 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
-      # GitHub Pages is static-only; API routes are not supported. Hide them so the build succeeds.
-      - name: Stash API routes for static export
-        run: mv app/api app/api.disabled 2>/dev/null || true
+      # GitHub Pages is static-only; API routes and dynamic segments cannot be used with static export.
+      - name: Remove API routes for static export
+        run: rm -rf app/api
 
       - name: Build with Next.js (static export)
         run: npx next build
-
-      - name: Restore API routes
-        run: mv app/api.disabled app/api 2>/dev/null || true
 
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
