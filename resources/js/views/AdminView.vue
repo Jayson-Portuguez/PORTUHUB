@@ -57,50 +57,107 @@
           </tbody>
         </table>
       </div>
-      <div v-if="modalProduct !== null" class="admin-modal-overlay" @click.self="modalProduct = null">
+      <div v-if="modalProduct !== null" class="admin-modal-overlay" @click.self="requestCloseModal">
         <div class="admin-modal">
           <div class="admin-modal-header">
             <h3 style="margin: 0; font-size: 1.1rem;">{{ isAdd ? 'Add product' : 'Edit product' }}</h3>
-            <button type="button" class="admin-modal-close" @click="modalProduct = null" aria-label="Close">×</button>
+            <button type="button" class="admin-modal-close" @click="requestCloseModal" aria-label="Close">×</button>
           </div>
           <form @submit.prevent="saveProduct">
             <div class="admin-modal-body">
               <div class="form-group">
                 <label>Name</label>
-                <input v-model="form.name" required />
+                <input v-model="form.name" @input="markDirty" required />
+              </div>
+              <div class="form-group">
+                <label>Category</label>
+                <select v-model="form.category" @change="markDirty" required>
+                  <option disabled value="">Select category</option>
+                  <option>Electronics</option>
+                  <option>Fashion</option>
+                  <option>Home & Living</option>
+                  <option>Groceries</option>
+                  <option>Beauty & Personal Care</option>
+                  <option>Sports & Outdoors</option>
+                  <option>Others</option>
+                </select>
               </div>
               <div class="form-group">
                 <label>Description</label>
-                <textarea v-model="form.description" rows="4"></textarea>
+                <textarea v-model="form.description" @input="markDirty" rows="4"></textarea>
               </div>
-              <div class="form-group">
-                <label>Price (₱)</label>
-                <input v-model.number="form.price" type="number" step="0.01" min="0" required />
-              </div>
-              <div class="form-group">
-                <label>Stock</label>
-                <input v-model.number="form.stock" type="number" min="0" class="stock-input" required />
+              <div class="form-row-two">
+                <div class="form-group">
+                  <label>Price (₱)</label>
+                  <input v-model.number="form.price" @input="markDirty" type="number" step="0.01" min="0" required />
+                </div>
+                <div class="form-group">
+                  <label>Stock</label>
+                  <input v-model.number="form.stock" @input="markDirty" type="number" min="0" class="stock-input" required />
+                </div>
               </div>
               <div class="form-group">
                 <label>Images</label>
-                <div class="image-upload-area">
-                  <div v-for="(url, idx) in form.imageUrls" :key="'url-' + idx" class="image-preview-wrap">
-                    <img :src="url" :alt="'Image ' + (idx + 1)" class="image-preview-thumb" />
-                    <button type="button" class="image-preview-remove" @click="form.imageUrls.splice(idx, 1)" aria-label="Remove image">×</button>
+                <p class="field-help">
+                  Upload up to 6 clear product photos (JPG, PNG, GIF or WEBP). The first image will appear as the main product photo.
+                </p>
+                <div class="image-upload-shell">
+                  <div class="image-upload-area">
+                    <div
+                      v-for="(url, idx) in form.imageUrls"
+                      :key="'url-' + idx"
+                      class="image-preview-wrap"
+                    >
+                      <img :src="url" :alt="'Image ' + (idx + 1)" class="image-preview-thumb" />
+                      <span v-if="idx === 0" class="image-badge">Primary</span>
+                      <button
+                        type="button"
+                        class="image-preview-remove"
+                        @click="form.imageUrls.splice(idx, 1); markDirty();"
+                        aria-label="Remove image"
+                      >
+                        ×
+                      </button>
+                    </div>
+                    <div
+                      v-for="(file, idx) in imageFileList"
+                      :key="'file-' + idx"
+                      class="image-preview-wrap"
+                    >
+                      <img :src="filePreview(file)" :alt="'New ' + (idx + 1)" class="image-preview-thumb" />
+                      <button
+                        type="button"
+                        class="image-preview-remove"
+                        @click="imageFileList.splice(idx, 1); markDirty();"
+                        aria-label="Remove"
+                      >
+                        ×
+                      </button>
+                    </div>
+                    <label class="image-upload-add" :class="{ 'image-upload-add-disabled': totalImageCount >= 6 }">
+                      <input
+                        type="file"
+                        accept="image/jpeg,image/png,image/gif,image/webp"
+                        multiple
+                        @change="onImageSelect"
+                        :disabled="totalImageCount >= 6"
+                      />
+                      <div class="image-upload-add-inner">
+                        <span class="image-upload-add-icon">＋</span>
+                        <span class="image-upload-add-text">
+                          {{ totalImageCount >= 6 ? 'Maximum images reached' : 'Click to browse images' }}
+                        </span>
+                      </div>
+                    </label>
                   </div>
-                  <div v-for="(file, idx) in imageFileList" :key="'file-' + idx" class="image-preview-wrap">
-                    <img :src="filePreview(file)" :alt="'New ' + (idx + 1)" class="image-preview-thumb" />
-                    <button type="button" class="image-preview-remove" @click="imageFileList.splice(idx, 1)" aria-label="Remove">×</button>
+                  <div class="image-upload-meta">
+                    <span class="image-upload-count">{{ totalImageCount }}/6 images</span>
                   </div>
-                  <label class="image-upload-add">
-                    <input type="file" accept="image/jpeg,image/png,image/gif,image/webp" multiple @change="onImageSelect" />
-                    <span>+ Add images</span>
-                  </label>
                 </div>
               </div>
             </div>
             <div class="admin-modal-footer">
-              <button type="button" @click="modalProduct = null" class="btn btn-ghost">Cancel</button>
+              <button type="button" @click="requestCloseModal" class="btn btn-ghost">Cancel</button>
               <button type="submit" class="btn btn-primary">Save</button>
             </div>
           </form>
@@ -119,8 +176,9 @@ const password = ref('');
 const loginError = ref('');
 const products = ref([]);
 const modalProduct = ref(null);
-const form = ref({ name: '', description: '', price: 0, stock: 0, imageUrls: [] });
+const form = ref({ name: '', category: '', description: '', price: 0, stock: 0, imageUrls: [] });
 const imageFileList = ref([]);
+const isDirty = ref(false);
 
 const ADMIN_TOKEN_KEY = 'admin_session_token';
 
@@ -132,13 +190,25 @@ function authHeaders() {
 }
 
 const isAdd = computed(() => modalProduct.value === 'add');
+const totalImageCount = computed(() => (form.value.imageUrls?.length || 0) + imageFileList.value.length);
 
 function filePreview(file) {
   return file && file instanceof File ? URL.createObjectURL(file) : '';
 }
 function onImageSelect(e) {
   const files = e.target.files;
-  if (files && files.length) imageFileList.value.push(...Array.from(files));
+  if (files && files.length) {
+    const remaining = 6 - totalImageCount.value;
+    if (remaining <= 0) {
+      e.target.value = '';
+      return;
+    }
+    const toAdd = Array.from(files).slice(0, remaining);
+    if (toAdd.length) {
+      imageFileList.value.push(...toAdd);
+      isDirty.value = true;
+    }
+  }
   e.target.value = '';
 }
 
@@ -198,20 +268,23 @@ async function handleLogout() {
 
 function openAdd() {
   modalProduct.value = 'add';
-  form.value = { name: '', description: '', price: 0, stock: 0, imageUrls: [] };
+  form.value = { name: '', category: '', description: '', price: 0, stock: 0, imageUrls: [] };
   imageFileList.value = [];
+  isDirty.value = false;
 }
 
 function openEdit(p) {
   modalProduct.value = p;
   form.value = {
     name: p.name,
+    category: p.category || '',
     description: p.description || '',
     price: p.price,
     stock: p.stock,
     imageUrls: [...(p.imageUrls || [])],
   };
   imageFileList.value = [];
+  isDirty.value = false;
 }
 
 async function saveProduct() {
@@ -225,7 +298,16 @@ async function saveProduct() {
       const upData = await up.json().catch(() => ({}));
       if (up.ok && Array.isArray(upData.urls)) imageUrls = imageUrls.concat(upData.urls);
     } catch {
-      alert('Image upload failed.');
+      if (window.Swal) {
+        await window.Swal.fire({
+          icon: 'error',
+          title: 'Upload failed',
+          text: 'Image upload failed. Please try again.',
+          confirmButtonColor: '#16a34a',
+        });
+      } else {
+        alert('Image upload failed.');
+      }
       return;
     }
   }
@@ -239,6 +321,7 @@ async function saveProduct() {
       credentials: 'include',
       body: JSON.stringify({
         name: form.value.name,
+        category: form.value.category,
         description: form.value.description,
         price: form.value.price,
         stock: form.value.stock,
@@ -247,21 +330,79 @@ async function saveProduct() {
     });
     const data = await res.json().catch(() => ({}));
     if (!res.ok) {
-      alert(data.error || 'Failed to save');
+      const message = data.error || 'Failed to save product.';
+      if (window.Swal) {
+        await window.Swal.fire({
+          icon: 'error',
+          title: 'Save failed',
+          text: message,
+          confirmButtonColor: '#16a34a',
+        });
+      } else {
+        alert(message);
+      }
       return;
     }
     modalProduct.value = null;
+    isDirty.value = false;
     await loadProducts();
   } catch {
-    alert('Network error');
+    if (window.Swal) {
+      await window.Swal.fire({
+        icon: 'error',
+        title: 'Network error',
+        text: 'Something went wrong. Please check your connection.',
+        confirmButtonColor: '#16a34a',
+      });
+    } else {
+      alert('Network error');
+    }
   }
 }
 
 async function deleteProduct(id) {
-  if (!confirm('Delete this product? This cannot be undone.')) return;
+  if (window.Swal) {
+    const result = await window.Swal.fire({
+      icon: 'warning',
+      title: 'Delete product?',
+      text: 'This action cannot be undone.',
+      showCancelButton: true,
+      confirmButtonText: 'Yes, delete',
+      cancelButtonText: 'Cancel',
+      confirmButtonColor: '#dc2626',
+      cancelButtonColor: '#6b7280',
+    });
+    if (!result.isConfirmed) return;
+  } else if (!confirm('Delete this product? This cannot be undone.')) {
+    return;
+  }
   try {
     const res = await fetch(`/api/products/${id}`, { method: 'DELETE', credentials: 'include', headers: authHeaders() });
     if (res.ok) products.value = products.value.filter((p) => p.id !== id);
   } catch {}
+}
+
+function markDirty() {
+  isDirty.value = true;
+}
+
+async function requestCloseModal() {
+  if (window.Swal) {
+    const result = await window.Swal.fire({
+      icon: 'question',
+      title: 'Close without saving?',
+      text: 'Any unsaved changes to this product will be lost.',
+      showCancelButton: true,
+      confirmButtonText: 'Close anyway',
+      cancelButtonText: 'Continue editing',
+      confirmButtonColor: '#dc2626',
+      cancelButtonColor: '#6b7280',
+    });
+    if (!result.isConfirmed) return;
+  } else if (!confirm('Close without saving this product?')) {
+    return;
+  }
+  modalProduct.value = null;
+  isDirty.value = false;
 }
 </script>

@@ -23,6 +23,9 @@
             />
             <div class="carousel-item-content">
               <h3>{{ p.name }}</h3>
+              <p v-if="p.category" style="font-size: 0.8rem; color: #737373; margin-top: 0.15rem;">
+                {{ p.category }}
+              </p>
               <p class="price">₱{{ Number(p.price).toLocaleString() }}</p>
             </div>
           </router-link>

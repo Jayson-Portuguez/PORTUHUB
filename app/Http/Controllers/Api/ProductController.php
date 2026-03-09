@@ -39,6 +39,7 @@ class ProductController extends Controller
         $products = Product::orderBy('created_at', 'desc')->get();
         return response()->json($products->map(fn ($p) => [
             'id' => $p->id,
+            'category' => $p->category,
             'name' => $p->name,
             'description' => $p->description,
             'price' => (float) $p->price,
@@ -53,6 +54,7 @@ class ProductController extends Controller
         $products = Product::orderBy('created_at', 'desc')->limit(8)->get();
         return response()->json($products->map(fn ($p) => [
             'id' => $p->id,
+            'category' => $p->category,
             'name' => $p->name,
             'description' => $p->description,
             'price' => (float) $p->price,
@@ -69,6 +71,7 @@ class ProductController extends Controller
         }
         $validated = $request->validate([
             'name' => 'required|string|max:500',
+            'category' => 'required|string|max:100',
             'description' => 'nullable|string',
             'price' => 'required|numeric|min:0',
             'stock' => 'required|integer|min:0',
@@ -78,6 +81,7 @@ class ProductController extends Controller
         $product = new Product;
         $product->id = Str::uuid()->toString();
         $product->name = $validated['name'];
+        $product->category = $validated['category'];
         $product->description = $validated['description'] ?? '';
         $product->price = $validated['price'];
         $product->stock = $validated['stock'];
@@ -85,6 +89,7 @@ class ProductController extends Controller
         $product->save();
         return response()->json([
             'id' => $product->id,
+            'category' => $product->category,
             'name' => $product->name,
             'description' => $product->description,
             'price' => (float) $product->price,
@@ -102,6 +107,7 @@ class ProductController extends Controller
         }
         return response()->json([
             'id' => $product->id,
+            'category' => $product->category,
             'name' => $product->name,
             'description' => $product->description,
             'price' => (float) $product->price,
@@ -122,6 +128,7 @@ class ProductController extends Controller
         }
         $validated = $request->validate([
             'name' => 'required|string|max:500',
+            'category' => 'required|string|max:100',
             'description' => 'nullable|string',
             'price' => 'required|numeric|min:0',
             'stock' => 'required|integer|min:0',
@@ -130,6 +137,7 @@ class ProductController extends Controller
         ]);
         $product->update([
             'name' => $validated['name'],
+            'category' => $validated['category'],
             'description' => $validated['description'] ?? '',
             'price' => $validated['price'],
             'stock' => $validated['stock'],

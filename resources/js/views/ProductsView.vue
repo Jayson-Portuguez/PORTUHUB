@@ -1,10 +1,30 @@
 <template>
   <div class="container" style="padding-bottom: 3rem;">
     <h1 class="section-title">Products</h1>
+    <div class="products-filters" v-if="categories.length">
+      <button
+        type="button"
+        class="chip"
+        :class="{ 'chip-active': selectedCategory === 'all' }"
+        @click="selectedCategory = 'all'"
+      >
+        All
+      </button>
+      <button
+        v-for="cat in categories"
+        :key="cat"
+        type="button"
+        class="chip"
+        :class="{ 'chip-active': selectedCategory === cat }"
+        @click="selectedCategory = cat"
+      >
+        {{ cat }}
+      </button>
+    </div>
     <div v-if="loading" style="color: #737373;">Loading...</div>
     <div v-else class="card-grid">
       <div
-        v-for="p in products"
+        v-for="p in filteredProducts"
         :key="p.id"
         class="product-card product-card-clickable"
         @click="openZoom(p)"
@@ -62,9 +82,23 @@ import { useRoute } from 'vue-router';
 
 const route = useRoute();
 const products = ref([]);
+const selectedCategory = ref('all');
 const loading = ref(true);
 const zoomProduct = ref(null);
 const zoomIndex = ref(0);
+
+const categories = computed(() => {
+  const set = new Set();
+  products.value.forEach((p) => {
+    if (p.category) set.add(p.category);
+  });
+  return Array.from(set).sort();
+});
+
+const filteredProducts = computed(() => {
+  if (selectedCategory.value === 'all') return products.value;
+  return products.value.filter((p) => p.category === selectedCategory.value);
+});
 
 const zoomImages = computed(() => {
   if (!zoomProduct.value || !zoomProduct.value.imageUrls || !zoomProduct.value.imageUrls.length) {
