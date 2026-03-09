@@ -12,22 +12,6 @@ jobs:
   publish:
     runs-on: ubuntu-latest
     steps:
-      - name: Check required secrets
-        run: |
-          if [ -z "${{ secrets.FTP_SERVER }}" ]; then
-            echo "::error::Missing secret FTP_SERVER. In GitHub: Settings → Secrets and variables → Actions → New repository secret. Name: FTP_SERVER, Value: your GoDaddy FTP host (e.g. ftp.yourdomain.com)"
-            exit 1
-          fi
-          if [ -z "${{ secrets.FTP_USERNAME }}" ]; then
-            echo "::error::Missing secret FTP_USERNAME. Add it in Settings → Secrets and variables → Actions."
-            exit 1
-          fi
-          if [ -z "${{ secrets.FTP_PASSWORD }}" ]; then
-            echo "::error::Missing secret FTP_PASSWORD. Add it in Settings → Secrets and variables → Actions."
-            exit 1
-          fi
-          echo "Required secrets are set."
-
       - name: Checkout repository
         uses: actions/checkout@v4
 
