@@ -8,10 +8,22 @@ const manifest = fs.existsSync(manifestPath)
   ? JSON.parse(fs.readFileSync(manifestPath, 'utf8'))
   : {};
 
-const entry = manifest['resources/js/app.js'] || manifest['resources/css/app.css'] || Object.values(manifest)[0];
+// Prefer the explicit JS app entry, but gracefully fall back to any JS entry.
+const jsEntry =
+  manifest['resources/js/app.js'] ||
+  Object.values(manifest).find((v) => v?.isEntry && typeof v.file === 'string' && v.file.endsWith('.js')) ||
+  null;
+
+// Prefer the explicit CSS app entry, but fall back to css on the JS entry.
+const cssEntry =
+  manifest['resources/css/app.css'] ||
+  jsEntry ||
+  Object.values(manifest)[0] ||
+  null;
+
 const base = '/';
-const js = entry?.file ? base + 'build/' + entry.file : '';
-const css = (entry?.css || []).map((c) => base + 'build/' + c);
+const js = jsEntry?.file ? base + 'build/' + jsEntry.file : '';
+const css = (cssEntry?.css || []).map((c) => base + 'build/' + c);
 const linkTags = css.map((c) => `<link rel="stylesheet" href="${c}">`).join('\n  ');
 const scriptTag = js ? `<script type="module" src="${js}"></script>` : '';
 

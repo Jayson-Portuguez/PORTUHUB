@@ -38,7 +38,7 @@
             <tr>
               <th>Name</th>
               <th>Price</th>
-              <th>Stocdasdask</th>
+              <th>Stocks</th>
               <th></th>
             </tr>
           </thead>
