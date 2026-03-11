@@ -45,6 +45,33 @@ const html = `<!DOCTYPE html>
 </body>
 </html>`;
 
-fs.mkdirSync('deploy', { recursive: true });
-fs.writeFileSync('deploy/index.html', html);
-fs.writeFileSync('deploy/404.html', html);
+const outDir = 'public_html';
+fs.mkdirSync(outDir, { recursive: true });
+fs.writeFileSync(`${outDir}/index.html`, html);
+fs.writeFileSync(`${outDir}/404.html`, html);
+
+// Copy build assets so live site in public_html can serve them
+const buildSrc = 'public/build';
+const buildDest = `${outDir}/build`;
+if (fs.existsSync(buildSrc)) {
+  fs.mkdirSync(buildDest, { recursive: true });
+  for (const name of fs.readdirSync(buildSrc)) {
+    const src = `${buildSrc}/${name}`;
+    const dest = `${buildDest}/${name}`;
+    if (fs.statSync(src).isDirectory()) {
+      copyDirSync(src, dest);
+    } else {
+      fs.copyFileSync(src, dest);
+    }
+  }
+}
+
+function copyDirSync(src, dest) {
+  fs.mkdirSync(dest, { recursive: true });
+  for (const name of fs.readdirSync(src)) {
+    const s = `${src}/${name}`;
+    const d = `${dest}/${name}`;
+    if (fs.statSync(s).isDirectory()) copyDirSync(s, d);
+    else fs.copyFileSync(s, d);
+  }
+}

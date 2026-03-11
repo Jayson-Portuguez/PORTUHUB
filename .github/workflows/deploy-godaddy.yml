@@ -45,19 +45,17 @@ jobs:
           npm ci
           npm run build
 
-      - name: Prepare static site for GitHub Pages
+      - name: Prepare static site (public_html for live)
         run: |
-          mkdir -p deploy/build
-          cp -r public/build/* deploy/build/
           node .github/scripts/prepare-pages.mjs
-          cp public/logo.svg deploy/ 2>/dev/null || true
-          cp public/favicon.ico deploy/ 2>/dev/null || true
-          cp public/placeholder.svg deploy/ 2>/dev/null || true
+          cp public/logo.svg public_html/ 2>/dev/null || true
+          cp public/favicon.ico public_html/ 2>/dev/null || true
+          cp public/placeholder.svg public_html/ 2>/dev/null || true
 
       - name: Upload artifact for GitHub Pages
         uses: actions/upload-pages-artifact@v3
         with:
-          path: deploy
+          path: public_html
 
   deploy:
     needs: build
