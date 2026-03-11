@@ -1,0 +1,49 @@
+{
+  "resources/css/app.css": {
+    "file": "assets/app-DdwwsBuO.css",
+    "src": "resources/css/app.css",
+    "isEntry": true,
+    "name": "app",
+    "names": [
+      "app.css"
+    ]
+  },
+  "resources/js/app.js": {
+    "file": "assets/app-CLCOWyHU.js",
+    "name": "app",
+    "src": "resources/js/app.js",
+    "isEntry": true,
+    "dynamicImports": [
+      "resources/js/views/HomeView.vue",
+      "resources/js/views/ProductsView.vue",
+      "resources/js/views/AdminView.vue"
+    ]
+  },
+  "resources/js/views/AdminView.vue": {
+    "file": "assets/AdminView-CWrAye3_.js",
+    "name": "AdminView",
+    "src": "resources/js/views/AdminView.vue",
+    "isDynamicEntry": true,
+    "imports": [
+      "resources/js/app.js"
+    ]
+  },
+  "resources/js/views/HomeView.vue": {
+    "file": "assets/HomeView-D4TKCnw_.js",
+    "name": "HomeView",
+    "src": "resources/js/views/HomeView.vue",
+    "isDynamicEntry": true,
+    "imports": [
+      "resources/js/app.js"
+    ]
+  },
+  "resources/js/views/ProductsView.vue": {
+    "file": "assets/ProductsView-BUGknAGh.js",
+    "name": "ProductsView",
+    "src": "resources/js/views/ProductsView.vue",
+    "isDynamicEntry": true,
+    "imports": [
+      "resources/js/app.js"
+    ]
+  }
+}
