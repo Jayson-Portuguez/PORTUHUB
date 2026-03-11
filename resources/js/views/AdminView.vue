@@ -26,8 +26,10 @@
           <h1>Admin</h1>
           <div class="admin-top-right">
             <button type="button" @click="handleLogout" class="btn btn-ghost">Logout</button>
-            <button type="button" @click="openAdd" class="btn btn-primary">Add product</button>
           </div>
+        </div>
+        <div class="admin-top-right">
+        <button type="button" @click="openAdd" class="btn btn-primary">Add products</button>
         </div>
       </div>
       <div class="admin-table-wrap">
@@ -36,7 +38,7 @@
             <tr>
               <th>Name</th>
               <th>Price</th>
-              <th>Stock</th>
+              <th>Stocdasdask</th>
               <th></th>
             </tr>
           </thead>
