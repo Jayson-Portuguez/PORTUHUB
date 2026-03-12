@@ -10,6 +10,20 @@ use Illuminate\Support\Str;
 
 class ProductController extends Controller
 {
+    private function toPublicImageUrls(array $urls): array
+    {
+        return array_values(array_filter(array_map(function ($u) {
+            if (! is_string($u) || $u === '') {
+                return null;
+            }
+            if (str_starts_with($u, 'http://') || str_starts_with($u, 'https://')) {
+                return $u;
+            }
+            // Ensure relative paths (e.g. /storage/...) work from static frontends too.
+            return url($u);
+        }, $urls)));
+    }
+
     private function adminToken(): ?string
     {
         $token = request()->cookie('admin_session');
@@ -43,7 +57,7 @@ class ProductController extends Controller
             'name' => $p->name,
             'description' => $p->description,
             'price' => (float) $p->price,
-            'imageUrls' => $p->image_urls ?? [],
+            'imageUrls' => $this->toPublicImageUrls($p->image_urls ?? []),
             'stock' => (int) $p->stock,
             'createdAt' => $p->created_at?->toIso8601String(),
         ]));
@@ -58,7 +72,7 @@ class ProductController extends Controller
             'name' => $p->name,
             'description' => $p->description,
             'price' => (float) $p->price,
-            'imageUrls' => $p->image_urls ?? [],
+            'imageUrls' => $this->toPublicImageUrls($p->image_urls ?? []),
             'stock' => (int) $p->stock,
             'createdAt' => $p->created_at?->toIso8601String(),
         ]));
@@ -85,7 +99,7 @@ class ProductController extends Controller
         $product->description = $validated['description'] ?? '';
         $product->price = $validated['price'];
         $product->stock = $validated['stock'];
-        $product->image_urls = $validated['imageUrls'] ?? ['/placeholder.png'];
+        $product->image_urls = $validated['imageUrls'] ?? ['/placeholder.svg'];
         $product->save();
         return response()->json([
             'id' => $product->id,
@@ -93,7 +107,7 @@ class ProductController extends Controller
             'name' => $product->name,
             'description' => $product->description,
             'price' => (float) $product->price,
-            'imageUrls' => $product->image_urls ?? [],
+            'imageUrls' => $this->toPublicImageUrls($product->image_urls ?? []),
             'stock' => (int) $product->stock,
             'createdAt' => $product->created_at?->toIso8601String(),
         ]);
@@ -111,7 +125,7 @@ class ProductController extends Controller
             'name' => $product->name,
             'description' => $product->description,
             'price' => (float) $product->price,
-            'imageUrls' => $product->image_urls ?? [],
+            'imageUrls' => $this->toPublicImageUrls($product->image_urls ?? []),
             'stock' => (int) $product->stock,
             'createdAt' => $product->created_at?->toIso8601String(),
         ]);
@@ -148,7 +162,7 @@ class ProductController extends Controller
             'name' => $product->name,
             'description' => $product->description,
             'price' => (float) $product->price,
-            'imageUrls' => $product->image_urls ?? [],
+            'imageUrls' => $this->toPublicImageUrls($product->image_urls ?? []),
             'stock' => (int) $product->stock,
             'createdAt' => $product->created_at?->toIso8601String(),
         ]);
