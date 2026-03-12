@@ -22,22 +22,8 @@ const cssEntry =
   null;
 
 const base = '/';
-
-function normalizeAssetPath(p) {
-  if (!p) return '';
-  let clean = p;
-  // Strip leading ./ or ../ segments
-  clean = clean.replace(/^(\.\/|(\.\.\/))+/, '');
-  // Strip leading /public or public/, and /build or build/ if present
-  clean = clean.replace(/^\/?public\//, '');
-  clean = clean.replace(/^\/?build\//, '');
-  return base + 'build/' + clean;
-}
-
-// Normalize all JS and CSS asset paths we emit so both local
-// and live manifests (even with ../public/build prefixes) work.
-const js = normalizeAssetPath(jsEntry?.file);
-const css = (cssEntry?.css || []).map((c) => normalizeAssetPath(c));
+const js = jsEntry?.file ? base + 'build/' + jsEntry.file : '';
+const css = (cssEntry?.css || []).map((c) => base + 'build/' + c);
 const linkTags = css.map((c) => `<link rel="stylesheet" href="${c}">`).join('\n  ');
 const scriptTag = js ? `<script type="module" src="${js}"></script>` : '';
 
