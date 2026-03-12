@@ -48,7 +48,8 @@ class UploadController extends Controller
         $urls = [];
         foreach ($request->file('images') as $file) {
             $path = $file->store('products', 'public');
-            $urls[] = '/storage/'.$path;
+            // Return absolute URL so images load correctly from static frontends
+            $urls[] = url(Storage::url($path));
         }
         return response()->json(['urls' => $urls]);
     }
