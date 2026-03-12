@@ -53,8 +53,8 @@ class UploadController extends Controller
         foreach ($request->file('images') as $file) {
             $filename = 'img_'.uniqid().'.'.$file->getClientOriginalExtension();
             $file->move($uploadDir, $filename);
-            // Absolute URL pointing to public/uploads so it works in production
-            $urls[] = url('/uploads/'.$filename);
+            // Absolute URL pointing to public/uploads so it matches production
+            $urls[] = url('/public/uploads/'.$filename);
         }
         return response()->json(['urls' => $urls]);
     }
