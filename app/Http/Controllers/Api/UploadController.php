@@ -46,10 +46,15 @@ class UploadController extends Controller
             'images.*' => 'image|mimes:jpeg,png,jpg,gif,webp|max:5120',
         ]);
         $urls = [];
+        $uploadDir = public_path('uploads');
+        if (! is_dir($uploadDir)) {
+            mkdir($uploadDir, 0755, true);
+        }
         foreach ($request->file('images') as $file) {
-            $path = $file->store('products', 'public');
-            // Return absolute URL so images load correctly from static frontends
-            $urls[] = url(Storage::url($path));
+            $filename = 'img_'.uniqid().'.'.$file->getClientOriginalExtension();
+            $file->move($uploadDir, $filename);
+            // Absolute URL pointing to public/uploads so it works in production
+            $urls[] = url('/uploads/'.$filename);
         }
         return response()->json(['urls' => $urls]);
     }
