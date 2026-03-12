@@ -1,6 +1,6 @@
 {
   "resources/css/app.css": {
-    "file": "assets/app-DdwwsBuO.css",
+    "file": "assets/app-DFbESyzA.css",
     "src": "resources/css/app.css",
     "isEntry": true,
     "name": "app",
@@ -9,7 +9,7 @@
     ]
   },
   "resources/js/app.js": {
-    "file": "assets/app-CLCOWyHU.js",
+    "file": "assets/app-rIzupeql.js",
     "name": "app",
     "src": "resources/js/app.js",
     "isEntry": true,
@@ -20,7 +20,7 @@
     ]
   },
   "resources/js/views/AdminView.vue": {
-    "file": "assets/AdminView-CWrAye3_.js",
+    "file": "assets/AdminView-D3K2gNeH.js",
     "name": "AdminView",
     "src": "resources/js/views/AdminView.vue",
     "isDynamicEntry": true,
@@ -29,7 +29,7 @@
     ]
   },
   "resources/js/views/HomeView.vue": {
-    "file": "assets/HomeView-D4TKCnw_.js",
+    "file": "assets/HomeView-CQV_tDYP.js",
     "name": "HomeView",
     "src": "resources/js/views/HomeView.vue",
     "isDynamicEntry": true,
@@ -38,7 +38,7 @@
     ]
   },
   "resources/js/views/ProductsView.vue": {
-    "file": "assets/ProductsView-BUGknAGh.js",
+    "file": "assets/ProductsView-BWGQLB49.js",
     "name": "ProductsView",
     "src": "resources/js/views/ProductsView.vue",
     "isDynamicEntry": true,

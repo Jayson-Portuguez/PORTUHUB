@@ -23,7 +23,20 @@ const cssEntry =
 
 const base = '/';
 const js = jsEntry?.file ? base + 'build/' + jsEntry.file : '';
-const css = (cssEntry?.css || []).map((c) => base + 'build/' + c);
+
+// Collect CSS files from the manifest:
+// - Prefer the explicit css array if present
+// - Otherwise, if the entry itself is a CSS file, use its "file" field
+const cssFiles = [];
+if (cssEntry) {
+  if (Array.isArray(cssEntry.css) && cssEntry.css.length > 0) {
+    cssFiles.push(...cssEntry.css);
+  } else if (typeof cssEntry.file === 'string' && cssEntry.file.endsWith('.css')) {
+    cssFiles.push(cssEntry.file);
+  }
+}
+
+const css = cssFiles.map((c) => base + 'build/' + c);
 const linkTags = css.map((c) => `<link rel="stylesheet" href="${c}">`).join('\n  ');
 const scriptTag = js ? `<script type="module" src="${js}"></script>` : '';
 
