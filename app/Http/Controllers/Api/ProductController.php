@@ -16,7 +16,6 @@ class ProductController extends Controller
     {
         $u = str_replace('\\', '/', $u);
 
-        // Handle both "/public/uploads/..." and "public/uploads/..." variants.
         $u = str_replace('/public/uploads/', '/uploads/', $u);
         $u = str_replace('public/uploads/', '/uploads/', $u);
         $u = str_replace('/public/uploads', '/uploads', $u);
@@ -25,19 +24,10 @@ class ProductController extends Controller
         return $u;
     }
 
-    private function absoluteFromRequest(string $path): string
-    {
-        $path = $this->normalizeImagePath($path);
-        $path = '/'.ltrim($path, '/');
-
-        return request()->getScheme().'://'.request()->getHttpHost().$path;
-    }
-
     private function ensureImageExists(string $path): string
     {
         $path = $this->normalizeImagePath($path);
 
-        // If DB references an upload that is missing from disk, fall back to placeholder.
         if (str_starts_with($path, '/uploads/')) {
             $diskPath = public_path(ltrim($path, '/'));
             if (! file_exists($diskPath)) {
@@ -48,30 +38,46 @@ class ProductController extends Controller
         return $path;
     }
 
+    /**
+     * @param  list<string>  $urls
+     * @return list<string>
+     */
     private function toPublicImageUrls(array $urls): array
     {
         return array_values(array_filter(array_map(function ($u) {
             if (! is_string($u) || $u === '') {
                 return null;
             }
-            // Data URL => already self-contained for <img>.
             if (str_starts_with($u, 'data:')) {
                 return $u;
             }
-            // Full URL so <img> works when the SPA is on another origin (e.g. Vite dev server).
-            // Avoid relying on APP_URL (can be wrong port during dev); instead use request host.
             if (str_starts_with($u, 'http://') || str_starts_with($u, 'https://')) {
                 $path = parse_url($u, PHP_URL_PATH) ?: '';
                 $path = $this->normalizeImagePath($path);
                 if (str_starts_with($path, '/uploads/') || $path === '/placeholder.svg') {
-                    return $this->absoluteFromRequest($this->ensureImageExists($path));
+                    return $this->ensureImageExists($path);
                 }
 
                 return $u;
             }
 
-            return $this->absoluteFromRequest($this->ensureImageExists($u));
+            $path = $this->ensureImageExists($u);
+
+            return $path;
         }, $urls)));
+    }
+
+    /** @return list<string> */
+    private function imagePathsFromProduct(Product $p): array
+    {
+        return $p->relationLoaded('images')
+            ? $p->images->pluck('path')->values()->all()
+            : $p->orderedImagePaths();
+    }
+
+    private function syncProductImages(Product $product, array $urls): void
+    {
+        $product->replaceImages($urls);
     }
 
     private function adminToken(): ?string
@@ -137,7 +143,7 @@ class ProductController extends Controller
             'name' => $p->name,
             'description' => $p->description,
             'price' => (float) $p->price,
-            'imageUrls' => $this->toPublicImageUrls($p->image_urls ?? []),
+            'imageUrls' => $this->toPublicImageUrls($this->imagePathsFromProduct($p)),
             'stock' => (int) $p->stock,
             'createdAt' => $p->created_at?->toIso8601String(),
         ];
@@ -157,7 +163,7 @@ class ProductController extends Controller
 
     public function index(Request $request): JsonResponse
     {
-        $query = Product::query()->orderBy('created_at', 'desc');
+        $query = Product::query()->with('images')->orderBy('created_at', 'desc');
 
         $category = $request->query('category');
         if (is_string($category) && $category !== '') {
@@ -180,7 +186,7 @@ class ProductController extends Controller
 
     public function new(): JsonResponse
     {
-        $products = Product::orderBy('created_at', 'desc')->limit(8)->get();
+        $products = Product::query()->with('images')->orderBy('created_at', 'desc')->limit(8)->get();
 
         return response()->json($products->map(fn ($p) => [
             'id' => $p->id,
@@ -188,7 +194,7 @@ class ProductController extends Controller
             'name' => $p->name,
             'description' => $p->description,
             'price' => (float) $p->price,
-            'imageUrls' => $this->toPublicImageUrls($p->image_urls ?? []),
+            'imageUrls' => $this->toPublicImageUrls($this->imagePathsFromProduct($p)),
             'stock' => (int) $p->stock,
             'createdAt' => $p->created_at?->toIso8601String(),
         ]));
@@ -206,7 +212,7 @@ class ProductController extends Controller
             'price' => 'required|numeric|min:0',
             'stock' => 'required|integer|min:0',
             'imageUrls' => 'nullable|array|max:6',
-            'imageUrls.*' => 'string|max:3000000',
+            'imageUrls.*' => 'string|max:2048',
         ]);
         $product = new Product;
         $product->id = Str::uuid()->toString();
@@ -215,8 +221,9 @@ class ProductController extends Controller
         $product->description = $validated['description'] ?? '';
         $product->price = $validated['price'];
         $product->stock = $validated['stock'];
-        $product->image_urls = $validated['imageUrls'] ?? ['/placeholder.svg'];
         $product->save();
+        $this->syncProductImages($product, $validated['imageUrls'] ?? ['/placeholder.svg']);
+        $product->load('images');
         $this->logProductActivity('product_created', $product->id, $product->name);
 
         return response()->json([
@@ -225,7 +232,7 @@ class ProductController extends Controller
             'name' => $product->name,
             'description' => $product->description,
             'price' => (float) $product->price,
-            'imageUrls' => $this->toPublicImageUrls($product->image_urls ?? []),
+            'imageUrls' => $this->toPublicImageUrls($this->imagePathsFromProduct($product)),
             'stock' => (int) $product->stock,
             'createdAt' => $product->created_at?->toIso8601String(),
         ]);
@@ -233,7 +240,7 @@ class ProductController extends Controller
 
     public function show(string $id): JsonResponse
     {
-        $product = Product::find($id);
+        $product = Product::query()->with('images')->find($id);
         if (! $product) {
             return response()->json(['error' => 'Not found'], 404);
         }
@@ -244,7 +251,7 @@ class ProductController extends Controller
             'name' => $product->name,
             'description' => $product->description,
             'price' => (float) $product->price,
-            'imageUrls' => $this->toPublicImageUrls($product->image_urls ?? []),
+            'imageUrls' => $this->toPublicImageUrls($this->imagePathsFromProduct($product)),
             'stock' => (int) $product->stock,
             'createdAt' => $product->created_at?->toIso8601String(),
         ]);
@@ -255,7 +262,7 @@ class ProductController extends Controller
         if (! $this->isAdmin()) {
             return response()->json(['error' => 'Unauthorized'], 401);
         }
-        $product = Product::find($id);
+        $product = Product::query()->with('images')->find($id);
         if (! $product) {
             return response()->json(['error' => 'Not found'], 404);
         }
@@ -266,7 +273,7 @@ class ProductController extends Controller
             'price' => 'required|numeric|min:0',
             'stock' => 'required|integer|min:0',
             'imageUrls' => 'nullable|array|max:6',
-            'imageUrls.*' => 'string|max:3000000',
+            'imageUrls.*' => 'string|max:2048',
         ]);
         $product->update([
             'name' => $validated['name'],
@@ -274,9 +281,12 @@ class ProductController extends Controller
             'description' => $validated['description'] ?? '',
             'price' => $validated['price'],
             'stock' => $validated['stock'],
-            'image_urls' => $validated['imageUrls'] ?? $product->image_urls,
         ]);
+        if (array_key_exists('imageUrls', $validated)) {
+            $this->syncProductImages($product, $validated['imageUrls']);
+        }
         $product->refresh();
+        $product->load('images');
         $this->logProductActivity('product_updated', $product->id, $product->name);
 
         return response()->json([
@@ -285,7 +295,7 @@ class ProductController extends Controller
             'name' => $product->name,
             'description' => $product->description,
             'price' => (float) $product->price,
-            'imageUrls' => $this->toPublicImageUrls($product->image_urls ?? []),
+            'imageUrls' => $this->toPublicImageUrls($this->imagePathsFromProduct($product)),
             'stock' => (int) $product->stock,
             'createdAt' => $product->created_at?->toIso8601String(),
         ]);

@@ -49,6 +49,10 @@ class ImportProductsFromJson extends Command
             if (! is_array($imageUrls) || $imageUrls === []) {
                 $imageUrls = ['/placeholder.svg'];
             }
+            $imageUrls = array_values(array_filter($imageUrls, fn ($u) => is_string($u) && $u !== ''));
+            if ($imageUrls === []) {
+                $imageUrls = ['/placeholder.svg'];
+            }
 
             $data = [
                 'name' => $row['name'],
@@ -60,15 +64,12 @@ class ImportProductsFromJson extends Command
                     : '',
                 'price' => isset($row['price']) ? (float) $row['price'] : 0.0,
                 'stock' => isset($row['stock']) ? (int) $row['stock'] : 0,
-                'image_urls' => array_values(array_filter($imageUrls, fn ($u) => is_string($u) && $u !== '')),
             ];
-            if ($data['image_urls'] === []) {
-                $data['image_urls'] = ['/placeholder.svg'];
-            }
 
             $existing = Product::query()->find($id);
             if ($existing) {
                 $existing->update($data);
+                $existing->replaceImages($imageUrls);
             } else {
                 $attrs = array_merge(['id' => $id], $data);
                 if (isset($row['createdAt']) && is_string($row['createdAt'])) {
@@ -78,7 +79,8 @@ class ImportProductsFromJson extends Command
                         // keep default
                     }
                 }
-                Product::query()->create($attrs);
+                $product = Product::query()->create($attrs);
+                $product->replaceImages($imageUrls);
             }
             $imported++;
         }
