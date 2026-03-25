@@ -159,12 +159,12 @@ class LandingPageController extends Controller
         $validated = $request->validate([
             'heroHeadline' => 'required|string|max:500',
             'heroBody' => 'nullable|string|max:5000',
-            'heroImageUrl' => 'nullable|string|max:2000',
+            'heroImageUrl' => 'nullable|string|max:3000000',
             'featureKicker' => 'nullable|string|max:500',
             'featureTitle' => 'nullable|string|max:5000',
             'featureCtaLabel' => 'nullable|string|max:200',
             'featureCtaHref' => 'nullable|string|max:500',
-            'featureImageUrl' => 'nullable|string|max:2000',
+            'featureImageUrl' => 'nullable|string|max:3000000',
             'featureCaptionRight' => 'nullable|string|max:500',
         ]);
 

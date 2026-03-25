@@ -159,7 +159,7 @@
             <div class="form-group">
               <label>Images</label>
               <p class="field-help">
-                Upload up to 6 clear product photos (JPG, PNG, GIF or WEBP). The first image will appear as the main product photo.
+                Upload up to 6 photos (JPG, PNG, GIF or WEBP). Images are stored in the database with the product, not as files on the server.
               </p>
               <div class="image-upload-shell">
                 <div class="image-upload-area">

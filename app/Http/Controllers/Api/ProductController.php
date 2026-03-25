@@ -213,7 +213,7 @@ class ProductController extends Controller
             'price' => 'required|numeric|min:0|max:9999999999999.99',
             'stock' => 'required|integer|min:0',
             'imageUrls' => 'nullable|array|max:6',
-            'imageUrls.*' => 'string|max:2048',
+            'imageUrls.*' => 'string|max:3000000',
         ]);
         $product = new Product;
         $product->id = Str::uuid()->toString();
@@ -274,7 +274,7 @@ class ProductController extends Controller
             'price' => 'required|numeric|min:0|max:9999999999999.99',
             'stock' => 'required|integer|min:0',
             'imageUrls' => 'nullable|array|max:6',
-            'imageUrls.*' => 'string|max:2048',
+            'imageUrls.*' => 'string|max:3000000',
         ]);
         $product->update([
             'name' => $validated['name'],

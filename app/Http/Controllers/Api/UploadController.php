@@ -6,7 +6,6 @@ use App\Http\Controllers\Controller;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\UploadedFile;
-use Illuminate\Support\Str;
 
 class UploadController extends Controller
 {
@@ -40,87 +39,83 @@ class UploadController extends Controller
             ->exists();
     }
 
-    private function uploadsDir(): string
+    /**
+     * Encode raw bytes as a data URL (fallback when GD cannot decode).
+     */
+    private function rawDataUrl(string $contents, string $ext, string $mime): string
     {
-        $dir = public_path('uploads');
-        if (! is_dir($dir)) {
-            mkdir($dir, 0755, true);
+        if ($ext === 'jfif' || $mime === 'image/jfif') {
+            $mime = 'image/jpeg';
+        }
+        if ($mime === '' || ! str_starts_with($mime, 'image/')) {
+            $mime = match ($ext) {
+                'png' => 'image/png',
+                'jpg', 'jpeg', 'jfif' => 'image/jpeg',
+                'gif' => 'image/gif',
+                'webp' => 'image/webp',
+                default => 'image/jpeg',
+            };
         }
 
-        return $dir;
-    }
-
-    private function extensionForRawSave(string $ext): string
-    {
-        $ext = strtolower($ext);
-        $allowed = ['jpg', 'jpeg', 'png', 'gif', 'webp', 'jfif'];
-        if (! in_array($ext, $allowed, true)) {
-            return 'jpg';
-        }
-        if ($ext === 'jpeg' || $ext === 'jfif') {
-            return 'jpg';
-        }
-
-        return $ext;
+        return 'data:'.$mime.';base64,'.base64_encode($contents);
     }
 
     /**
-     * Resize (max edge), write under public/uploads, return path /uploads/... for DB and URLs.
+     * Resize (max edge), return data URL only — nothing written under public/uploads.
      */
-    private function storeImageToPublic(UploadedFile $file): string
+    private function toOptimizedDataUrl(UploadedFile $file): string
     {
-        $dir = $this->uploadsDir();
         $contents = $file->getContent();
         $ext = strtolower((string) $file->getClientOriginalExtension());
-        $mime = strtolower((string) $file->getClientMimeType());
-        $usePng = $ext === 'png' || str_contains($mime, 'png');
-        $outExt = $usePng ? 'png' : 'jpg';
-        $basename = 'img_'.Str::random(16).'.'.$outExt;
-        $fullPath = $dir.DIRECTORY_SEPARATOR.$basename;
+        $mime = (string) $file->getClientMimeType();
 
-        if (extension_loaded('gd')) {
-            $img = @imagecreatefromstring($contents);
-            if ($img !== false) {
-                $w = imagesx($img);
-                $h = imagesy($img);
-                $max = self::MAX_EDGE;
-
-                if ($w > $max || $h > $max) {
-                    $ratio = min($max / $w, $max / $h);
-                    $nw = max(1, (int) round($w * $ratio));
-                    $nh = max(1, (int) round($h * $ratio));
-                    $dst = imagecreatetruecolor($nw, $nh);
-                    imagealphablending($dst, false);
-                    imagesavealpha($dst, true);
-                    $transparent = imagecolorallocatealpha($dst, 0, 0, 0, 127);
-                    imagefilledrectangle($dst, 0, 0, $nw, $nh, $transparent);
-                    imagealphablending($dst, true);
-                    imagecopyresampled($dst, $img, 0, 0, 0, 0, $nw, $nh, $w, $h);
-                    imagedestroy($img);
-                    $img = $dst;
-                }
-
-                if ($usePng) {
-                    imagesavealpha($img, true);
-                    imagepng($img, $fullPath, 6);
-                } else {
-                    imagejpeg($img, $fullPath, self::JPEG_QUALITY);
-                }
-                imagedestroy($img);
-
-                return '/uploads/'.$basename;
-            }
+        if (! extension_loaded('gd')) {
+            return $this->rawDataUrl($contents, $ext, $mime);
         }
 
-        $rawExt = $this->extensionForRawSave($ext);
-        $basename = 'img_'.Str::random(16).'.'.$rawExt;
-        file_put_contents($dir.DIRECTORY_SEPARATOR.$basename, $contents);
+        $img = @imagecreatefromstring($contents);
+        if ($img === false) {
+            return $this->rawDataUrl($contents, $ext, $mime);
+        }
 
-        return '/uploads/'.$basename;
+        $w = imagesx($img);
+        $h = imagesy($img);
+        $max = self::MAX_EDGE;
+
+        if ($w > $max || $h > $max) {
+            $ratio = min($max / $w, $max / $h);
+            $nw = max(1, (int) round($w * $ratio));
+            $nh = max(1, (int) round($h * $ratio));
+            $dst = imagecreatetruecolor($nw, $nh);
+            imagealphablending($dst, false);
+            imagesavealpha($dst, true);
+            $transparent = imagecolorallocatealpha($dst, 0, 0, 0, 127);
+            imagefilledrectangle($dst, 0, 0, $nw, $nh, $transparent);
+            imagealphablending($dst, true);
+            imagecopyresampled($dst, $img, 0, 0, 0, 0, $nw, $nh, $w, $h);
+            imagedestroy($img);
+            $img = $dst;
+        }
+
+        $usePng = $ext === 'png' || str_contains(strtolower($mime), 'png');
+
+        ob_start();
+        if ($usePng) {
+            imagesavealpha($img, true);
+            imagepng($img, null, 6);
+            $outMime = 'image/png';
+        } else {
+            imagejpeg($img, null, self::JPEG_QUALITY);
+            $outMime = 'image/jpeg';
+        }
+        $binary = ob_get_clean();
+        imagedestroy($img);
+
+        return 'data:'.$outMime.';base64,'.base64_encode($binary);
     }
 
     /**
-     * Upload one or more images. Returns /uploads/... paths (short strings safe for landing_settings varchar).
+     * Upload one or more images. Returns data URLs stored in the database by the client (no disk files).
      */
     public function store(Request $request): JsonResponse
     {
@@ -134,7 +129,7 @@ class UploadController extends Controller
 
         $urls = [];
         foreach ($request->file('images') as $file) {
-            $urls[] = $this->storeImageToPublic($file);
+            $urls[] = $this->toOptimizedDataUrl($file);
         }
 
         return response()->json(['urls' => $urls]);

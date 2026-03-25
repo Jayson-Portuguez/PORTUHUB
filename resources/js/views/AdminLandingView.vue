@@ -14,7 +14,7 @@
         </div>
         <div class="form-group">
           <label>Hero image</label>
-          <p class="field-help">Upload or paste URL after upload. Shown large under the headline.</p>
+          <p class="field-help">Upload a photo — it is stored in the database with the landing content (no server folder).</p>
           <div v-if="form.heroImageUrl" class="admin-landing-preview">
             <img :src="form.heroImageUrl" alt="" />
           </div>
@@ -46,7 +46,7 @@
         </div>
         <div class="form-group">
           <label>Secondary image (optional)</label>
-          <p class="field-help">If empty, the hero image is reused here.</p>
+          <p class="field-help">Optional second photo, stored in the database. If empty, the hero image is reused.</p>
           <div v-if="form.featureImageUrl" class="admin-landing-preview">
             <img :src="form.featureImageUrl" alt="" />
           </div>
