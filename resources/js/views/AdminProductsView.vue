@@ -140,7 +140,16 @@
             <div class="form-row-two">
               <div class="form-group">
                 <label>Price (₱)</label>
-                <input v-model.number="form.price" @input="markDirty" type="number" step="0.01" min="0" required :disabled="saveSubmitting" />
+                <input
+                  v-model.number="form.price"
+                  @input="markDirty"
+                  type="number"
+                  step="0.01"
+                  min="0"
+                  max="9999999999999.99"
+                  required
+                  :disabled="saveSubmitting"
+                />
               </div>
               <div class="form-group">
                 <label>Stock</label>
@@ -463,7 +472,11 @@ async function saveProduct() {
     try {
       const res = await fetch(url, {
         method,
-        headers: { 'Content-Type': 'application/json', ...authHeaders() },
+        headers: {
+          Accept: 'application/json',
+          'Content-Type': 'application/json',
+          ...authHeaders(),
+        },
         credentials: 'include',
         body: JSON.stringify({
           name: form.value.name,
@@ -478,9 +491,9 @@ async function saveProduct() {
       if (!res.ok) {
         const message =
           firstValidationMessage(data) ||
-          data.error ||
           data.message ||
-          'Failed to save product. If you added many photos, try again with smaller files.';
+          data.error ||
+          'Could not save the product. Check required fields, price (very large amounts may be too big for the database), and images.';
         await showAlert({
           tone: 'error',
           title: 'Save failed',

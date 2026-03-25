@@ -209,7 +209,8 @@ class ProductController extends Controller
             'name' => 'required|string|max:500',
             'category' => 'required|string|max:100',
             'description' => 'nullable|string',
-            'price' => 'required|numeric|min:0',
+            // DECIMAL(15,2): max 13 integer digits (fits large PHP-style prices).
+            'price' => 'required|numeric|min:0|max:9999999999999.99',
             'stock' => 'required|integer|min:0',
             'imageUrls' => 'nullable|array|max:6',
             'imageUrls.*' => 'string|max:2048',
@@ -270,7 +271,7 @@ class ProductController extends Controller
             'name' => 'required|string|max:500',
             'category' => 'required|string|max:100',
             'description' => 'nullable|string',
-            'price' => 'required|numeric|min:0',
+            'price' => 'required|numeric|min:0|max:9999999999999.99',
             'stock' => 'required|integer|min:0',
             'imageUrls' => 'nullable|array|max:6',
             'imageUrls.*' => 'string|max:2048',
