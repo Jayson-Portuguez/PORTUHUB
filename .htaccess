@@ -1,0 +1,15 @@
+<IfModule mod_rewrite.c>
+    <IfModule mod_negotiation.c>
+        Options -MultiViews -Indexes
+    </IfModule>
+
+    RewriteEngine On
+
+    # Hostinger / shared hosting: when the domain's document root is the Laravel
+    # project folder (e.g. public_html contains app/, bootstrap/, public/, …),
+    # URLs must be served from /public (index.php, /build/assets, …).
+    # This file must sit next to the app/ folder (same level as public/).
+    # Skip if the request already targets /public/ (avoid rewriting twice).
+    RewriteCond %{REQUEST_URI} !^/public/
+    RewriteRule ^(.*)$ public/$1 [L]
+</IfModule>
