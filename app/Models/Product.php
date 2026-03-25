@@ -37,7 +37,10 @@ class Product extends Model
         return $paths === [] ? ['/placeholder.svg'] : array_values($paths);
     }
 
-    /** Store paths in product_images (max 6); files stay on disk under public/uploads. */
+    /**
+     * Persist up to 6 image payloads on product_images.path (data URLs from upload API,
+     * or legacy /uploads/... strings — no new files are written to disk here).
+     */
     public function replaceImages(array $urls): void
     {
         $this->images()->delete();

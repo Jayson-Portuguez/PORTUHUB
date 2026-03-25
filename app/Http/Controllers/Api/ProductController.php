@@ -5,65 +5,26 @@ namespace App\Http\Controllers\Api;
 use App\Http\Controllers\Controller;
 use App\Models\AdminActivityLog;
 use App\Models\Product;
+use App\Support\StoredImageForApi;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
 
 class ProductController extends Controller
 {
-    /** Fix legacy URLs from uploads saved as /public/uploads/... (web root is already public/). */
-    private function normalizeImagePath(string $u): string
-    {
-        $u = str_replace('\\', '/', $u);
-
-        $u = str_replace('/public/uploads/', '/uploads/', $u);
-        $u = str_replace('public/uploads/', '/uploads/', $u);
-        $u = str_replace('/public/uploads', '/uploads', $u);
-        $u = str_replace('public/uploads', '/uploads', $u);
-
-        return $u;
-    }
-
-    private function ensureImageExists(string $path): string
-    {
-        $path = $this->normalizeImagePath($path);
-
-        if (str_starts_with($path, '/uploads/')) {
-            $diskPath = public_path(ltrim($path, '/'));
-            if (! file_exists($diskPath)) {
-                return '/placeholder.svg';
-            }
-        }
-
-        return $path;
-    }
-
     /**
      * @param  list<string>  $urls
      * @return list<string>
      */
-    private function toPublicImageUrls(array $urls): array
+    private function toClientImageUrls(array $urls): array
     {
         return array_values(array_filter(array_map(function ($u) {
             if (! is_string($u) || $u === '') {
                 return null;
             }
-            if (str_starts_with($u, 'data:')) {
-                return $u;
-            }
-            if (str_starts_with($u, 'http://') || str_starts_with($u, 'https://')) {
-                $path = parse_url($u, PHP_URL_PATH) ?: '';
-                $path = $this->normalizeImagePath($path);
-                if (str_starts_with($path, '/uploads/') || $path === '/placeholder.svg') {
-                    return $this->ensureImageExists($path);
-                }
+            $resolved = StoredImageForApi::resolve($u);
 
-                return $u;
-            }
-
-            $path = $this->ensureImageExists($u);
-
-            return $path;
+            return $resolved ?? null;
         }, $urls)));
     }
 
@@ -143,7 +104,7 @@ class ProductController extends Controller
             'name' => $p->name,
             'description' => $p->description,
             'price' => (float) $p->price,
-            'imageUrls' => $this->toPublicImageUrls($this->imagePathsFromProduct($p)),
+            'imageUrls' => $this->toClientImageUrls($this->imagePathsFromProduct($p)),
             'stock' => (int) $p->stock,
             'createdAt' => $p->created_at?->toIso8601String(),
         ];
@@ -194,7 +155,7 @@ class ProductController extends Controller
             'name' => $p->name,
             'description' => $p->description,
             'price' => (float) $p->price,
-            'imageUrls' => $this->toPublicImageUrls($this->imagePathsFromProduct($p)),
+            'imageUrls' => $this->toClientImageUrls($this->imagePathsFromProduct($p)),
             'stock' => (int) $p->stock,
             'createdAt' => $p->created_at?->toIso8601String(),
         ]));
@@ -209,7 +170,6 @@ class ProductController extends Controller
             'name' => 'required|string|max:500',
             'category' => 'required|string|max:100',
             'description' => 'nullable|string',
-            // DECIMAL(15,2): max 13 integer digits (fits large PHP-style prices).
             'price' => 'required|numeric|min:0|max:9999999999999.99',
             'stock' => 'required|integer|min:0',
             'imageUrls' => 'nullable|array|max:6',
@@ -233,7 +193,7 @@ class ProductController extends Controller
             'name' => $product->name,
             'description' => $product->description,
             'price' => (float) $product->price,
-            'imageUrls' => $this->toPublicImageUrls($this->imagePathsFromProduct($product)),
+            'imageUrls' => $this->toClientImageUrls($this->imagePathsFromProduct($product)),
             'stock' => (int) $product->stock,
             'createdAt' => $product->created_at?->toIso8601String(),
         ]);
@@ -252,7 +212,7 @@ class ProductController extends Controller
             'name' => $product->name,
             'description' => $product->description,
             'price' => (float) $product->price,
-            'imageUrls' => $this->toPublicImageUrls($this->imagePathsFromProduct($product)),
+            'imageUrls' => $this->toClientImageUrls($this->imagePathsFromProduct($product)),
             'stock' => (int) $product->stock,
             'createdAt' => $product->created_at?->toIso8601String(),
         ]);
@@ -296,7 +256,7 @@ class ProductController extends Controller
             'name' => $product->name,
             'description' => $product->description,
             'price' => (float) $product->price,
-            'imageUrls' => $this->toPublicImageUrls($this->imagePathsFromProduct($product)),
+            'imageUrls' => $this->toClientImageUrls($this->imagePathsFromProduct($product)),
             'stock' => (int) $product->stock,
             'createdAt' => $product->created_at?->toIso8601String(),
         ]);
