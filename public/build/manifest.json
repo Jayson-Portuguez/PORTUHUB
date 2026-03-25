@@ -1,8 +1,4 @@
 {
-  "_auth-DBW8pVSA.js": {
-    "file": "assets/auth-DBW8pVSA.js",
-    "name": "auth"
-  },
   "resources/css/app.css": {
     "file": "assets/app-CV_gh9uD.css",
     "src": "resources/css/app.css",
@@ -13,78 +9,12 @@
     ]
   },
   "resources/js/app.js": {
-    "file": "assets/app-1yYD39Av.js",
+    "file": "assets/app-dime6sP5.js",
     "name": "app",
     "src": "resources/js/app.js",
     "isEntry": true,
-    "dynamicImports": [
-      "resources/js/views/HomeView.vue",
-      "resources/js/views/ProductsView.vue",
-      "resources/js/views/AdminLayout.vue",
-      "resources/js/views/AdminProductsView.vue",
-      "resources/js/views/AdminActivityView.vue",
-      "resources/js/views/AdminLandingView.vue"
-    ]
-  },
-  "resources/js/views/AdminActivityView.vue": {
-    "file": "assets/AdminActivityView-DmyAnw_G.js",
-    "name": "AdminActivityView",
-    "src": "resources/js/views/AdminActivityView.vue",
-    "isDynamicEntry": true,
-    "imports": [
-      "_auth-DBW8pVSA.js",
-      "resources/js/app.js"
-    ]
-  },
-  "resources/js/views/AdminLandingView.vue": {
-    "file": "assets/AdminLandingView-C6hm6V6r.js",
-    "name": "AdminLandingView",
-    "src": "resources/js/views/AdminLandingView.vue",
-    "isDynamicEntry": true,
-    "imports": [
-      "resources/js/app.js",
-      "_auth-DBW8pVSA.js"
-    ],
     "css": [
-      "assets/AdminLandingView-QcKCc12A.css"
-    ]
-  },
-  "resources/js/views/AdminLayout.vue": {
-    "file": "assets/AdminLayout-BLZI-G5W.js",
-    "name": "AdminLayout",
-    "src": "resources/js/views/AdminLayout.vue",
-    "isDynamicEntry": true,
-    "imports": [
-      "resources/js/app.js",
-      "_auth-DBW8pVSA.js"
-    ]
-  },
-  "resources/js/views/AdminProductsView.vue": {
-    "file": "assets/AdminProductsView-jGRjBQRD.js",
-    "name": "AdminProductsView",
-    "src": "resources/js/views/AdminProductsView.vue",
-    "isDynamicEntry": true,
-    "imports": [
-      "resources/js/app.js",
-      "_auth-DBW8pVSA.js"
-    ]
-  },
-  "resources/js/views/HomeView.vue": {
-    "file": "assets/HomeView-DYNStrk6.js",
-    "name": "HomeView",
-    "src": "resources/js/views/HomeView.vue",
-    "isDynamicEntry": true,
-    "imports": [
-      "resources/js/app.js"
-    ]
-  },
-  "resources/js/views/ProductsView.vue": {
-    "file": "assets/ProductsView-DQzglG2e.js",
-    "name": "ProductsView",
-    "src": "resources/js/views/ProductsView.vue",
-    "isDynamicEntry": true,
-    "imports": [
-      "resources/js/app.js"
+      "assets/app-QcKCc12A.css"
     ]
   }
 }

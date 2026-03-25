@@ -1,30 +1,36 @@
 import { createRouter, createWebHistory } from 'vue-router';
+import HomeView from '../views/HomeView.vue';
+import ProductsView from '../views/ProductsView.vue';
+import AdminLayout from '../views/AdminLayout.vue';
+import AdminProductsView from '../views/AdminProductsView.vue';
+import AdminActivityView from '../views/AdminActivityView.vue';
+import AdminLandingView from '../views/AdminLandingView.vue';
 
 const routes = [
-    { path: '/', name: 'home', component: () => import('../views/HomeView.vue') },
-    { path: '/products', name: 'products', component: () => import('../views/ProductsView.vue') },
+    { path: '/', name: 'home', component: HomeView },
+    { path: '/products', name: 'products', component: ProductsView },
     {
         path: '/admin',
-        component: () => import('../views/AdminLayout.vue'),
+        component: AdminLayout,
         children: [
             { path: '', redirect: { name: 'admin-products' } },
             {
                 path: 'products',
                 name: 'admin-products',
                 meta: { title: 'Products' },
-                component: () => import('../views/AdminProductsView.vue'),
+                component: AdminProductsView,
             },
             {
                 path: 'activity',
                 name: 'admin-activity',
                 meta: { title: 'Activity history' },
-                component: () => import('../views/AdminActivityView.vue'),
+                component: AdminActivityView,
             },
             {
                 path: 'landing',
                 name: 'admin-landing',
                 meta: { title: 'Landing page' },
-                component: () => import('../views/AdminLandingView.vue'),
+                component: AdminLandingView,
             },
         ],
     },
