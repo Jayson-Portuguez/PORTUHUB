@@ -1,6 +1,10 @@
 {
+  "_auth-DBW8pVSA.js": {
+    "file": "assets/auth-DBW8pVSA.js",
+    "name": "auth"
+  },
   "resources/css/app.css": {
-    "file": "assets/app-DFbESyzA.css",
+    "file": "assets/app-CV_gh9uD.css",
     "src": "resources/css/app.css",
     "isEntry": true,
     "name": "app",
@@ -9,27 +13,64 @@
     ]
   },
   "resources/js/app.js": {
-    "file": "assets/app-rIzupeql.js",
+    "file": "assets/app-FsWWg8i-.js",
     "name": "app",
     "src": "resources/js/app.js",
     "isEntry": true,
     "dynamicImports": [
       "resources/js/views/HomeView.vue",
       "resources/js/views/ProductsView.vue",
-      "resources/js/views/AdminView.vue"
+      "resources/js/views/AdminLayout.vue",
+      "resources/js/views/AdminProductsView.vue",
+      "resources/js/views/AdminActivityView.vue",
+      "resources/js/views/AdminLandingView.vue"
     ]
   },
-  "resources/js/views/AdminView.vue": {
-    "file": "assets/AdminView-D3K2gNeH.js",
-    "name": "AdminView",
-    "src": "resources/js/views/AdminView.vue",
+  "resources/js/views/AdminActivityView.vue": {
+    "file": "assets/AdminActivityView-6BnaCd9P.js",
+    "name": "AdminActivityView",
+    "src": "resources/js/views/AdminActivityView.vue",
     "isDynamicEntry": true,
     "imports": [
+      "_auth-DBW8pVSA.js",
       "resources/js/app.js"
     ]
   },
+  "resources/js/views/AdminLandingView.vue": {
+    "file": "assets/AdminLandingView-DmhwkjHe.js",
+    "name": "AdminLandingView",
+    "src": "resources/js/views/AdminLandingView.vue",
+    "isDynamicEntry": true,
+    "imports": [
+      "resources/js/app.js",
+      "_auth-DBW8pVSA.js"
+    ],
+    "css": [
+      "assets/AdminLandingView-2gu424Jo.css"
+    ]
+  },
+  "resources/js/views/AdminLayout.vue": {
+    "file": "assets/AdminLayout-DQCpBurG.js",
+    "name": "AdminLayout",
+    "src": "resources/js/views/AdminLayout.vue",
+    "isDynamicEntry": true,
+    "imports": [
+      "resources/js/app.js",
+      "_auth-DBW8pVSA.js"
+    ]
+  },
+  "resources/js/views/AdminProductsView.vue": {
+    "file": "assets/AdminProductsView-DMWDiqrf.js",
+    "name": "AdminProductsView",
+    "src": "resources/js/views/AdminProductsView.vue",
+    "isDynamicEntry": true,
+    "imports": [
+      "resources/js/app.js",
+      "_auth-DBW8pVSA.js"
+    ]
+  },
   "resources/js/views/HomeView.vue": {
-    "file": "assets/HomeView-CQV_tDYP.js",
+    "file": "assets/HomeView-BTYrjy1T.js",
     "name": "HomeView",
     "src": "resources/js/views/HomeView.vue",
     "isDynamicEntry": true,
@@ -38,7 +79,7 @@
     ]
   },
   "resources/js/views/ProductsView.vue": {
-    "file": "assets/ProductsView-BWGQLB49.js",
+    "file": "assets/ProductsView-CtoXXIQQ.js",
     "name": "ProductsView",
     "src": "resources/js/views/ProductsView.vue",
     "isDynamicEntry": true,

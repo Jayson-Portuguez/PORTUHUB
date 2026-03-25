@@ -1,6 +1,6 @@
 <template>
-  <div class="layout-wrap">
-    <nav class="nav">
+  <div class="layout-wrap" :class="{ 'layout-wrap--admin': isAdminRoute }">
+    <nav v-if="!isAdminRoute" class="nav">
       <div class="container nav-inner">
         <router-link to="/" class="logo">
           <img src="/logo.png" alt="PortuHub" class="logo-img" />
@@ -40,4 +40,9 @@
 </template>
 
 <script setup>
+import { computed } from 'vue';
+import { useRoute } from 'vue-router';
+
+const route = useRoute();
+const isAdminRoute = computed(() => route.path.startsWith('/admin'));
 </script>

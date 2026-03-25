@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
+use App\Models\AdminActivityLog;
 use App\Models\Product;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -10,17 +11,66 @@ use Illuminate\Support\Str;
 
 class ProductController extends Controller
 {
+    /** Fix legacy URLs from uploads saved as /public/uploads/... (web root is already public/). */
+    private function normalizeImagePath(string $u): string
+    {
+        $u = str_replace('\\', '/', $u);
+
+        // Handle both "/public/uploads/..." and "public/uploads/..." variants.
+        $u = str_replace('/public/uploads/', '/uploads/', $u);
+        $u = str_replace('public/uploads/', '/uploads/', $u);
+        $u = str_replace('/public/uploads', '/uploads', $u);
+        $u = str_replace('public/uploads', '/uploads', $u);
+
+        return $u;
+    }
+
+    private function absoluteFromRequest(string $path): string
+    {
+        $path = $this->normalizeImagePath($path);
+        $path = '/'.ltrim($path, '/');
+
+        return request()->getScheme().'://'.request()->getHttpHost().$path;
+    }
+
+    private function ensureImageExists(string $path): string
+    {
+        $path = $this->normalizeImagePath($path);
+
+        // If DB references an upload that is missing from disk, fall back to placeholder.
+        if (str_starts_with($path, '/uploads/')) {
+            $diskPath = public_path(ltrim($path, '/'));
+            if (! file_exists($diskPath)) {
+                return '/placeholder.svg';
+            }
+        }
+
+        return $path;
+    }
+
     private function toPublicImageUrls(array $urls): array
     {
         return array_values(array_filter(array_map(function ($u) {
             if (! is_string($u) || $u === '') {
                 return null;
             }
-            if (str_starts_with($u, 'http://') || str_starts_with($u, 'https://')) {
+            // Data URL => already self-contained for <img>.
+            if (str_starts_with($u, 'data:')) {
                 return $u;
             }
-            // Ensure relative paths (e.g. /storage/...) work from static frontends too.
-            return url($u);
+            // Full URL so <img> works when the SPA is on another origin (e.g. Vite dev server).
+            // Avoid relying on APP_URL (can be wrong port during dev); instead use request host.
+            if (str_starts_with($u, 'http://') || str_starts_with($u, 'https://')) {
+                $path = parse_url($u, PHP_URL_PATH) ?: '';
+                $path = $this->normalizeImagePath($path);
+                if (str_starts_with($path, '/uploads/') || $path === '/placeholder.svg') {
+                    return $this->absoluteFromRequest($this->ensureImageExists($path));
+                }
+
+                return $u;
+            }
+
+            return $this->absoluteFromRequest($this->ensureImageExists($u));
         }, $urls)));
     }
 
@@ -34,6 +84,7 @@ class ProductController extends Controller
         if ($header && str_starts_with($header, 'Bearer ')) {
             return substr($header, 7);
         }
+
         return null;
     }
 
@@ -43,32 +94,97 @@ class ProductController extends Controller
         if (! $token) {
             return false;
         }
+
         return \App\Models\AdminSession::where('token', $token)
             ->where('expires_at', '>', now())
             ->exists();
     }
 
-    public function index(): JsonResponse
+    private function logProductActivity(string $action, string $productId, string $productName, ?array $meta = null): void
     {
-        $products = Product::orderBy('created_at', 'desc')->get();
-        return response()->json($products->map(fn ($p) => [
+        try {
+            AdminActivityLog::query()->create([
+                'id' => Str::uuid()->toString(),
+                'action' => $action,
+                'product_id' => $productId,
+                'product_name' => $productName,
+                'meta' => $meta,
+            ]);
+        } catch (\Throwable) {
+            //
+        }
+    }
+
+    /** Non-empty category label for API / UI (legacy rows may be null or blank). */
+    private function categoryForApi(mixed $value): string
+    {
+        if (! is_string($value)) {
+            return 'Others';
+        }
+        $v = trim($value);
+
+        return $v !== '' ? $v : 'Others';
+    }
+
+    /**
+     * @return array<string, mixed>
+     */
+    private function productToSummary(Product $p): array
+    {
+        return [
             'id' => $p->id,
-            'category' => $p->category,
+            'category' => $this->categoryForApi($p->category),
             'name' => $p->name,
             'description' => $p->description,
             'price' => (float) $p->price,
             'imageUrls' => $this->toPublicImageUrls($p->image_urls ?? []),
             'stock' => (int) $p->stock,
             'createdAt' => $p->created_at?->toIso8601String(),
-        ]));
+        ];
+    }
+
+    public function categories(): JsonResponse
+    {
+        $cats = Product::query()
+            ->whereNotNull('category')
+            ->where('category', '!=', '')
+            ->distinct()
+            ->orderBy('category')
+            ->pluck('category');
+
+        return response()->json($cats->values()->all());
+    }
+
+    public function index(Request $request): JsonResponse
+    {
+        $query = Product::query()->orderBy('created_at', 'desc');
+
+        $category = $request->query('category');
+        if (is_string($category) && $category !== '') {
+            $query->where('category', $category);
+        }
+
+        if ($request->query('page') !== null && $request->query('page') !== '') {
+            $perPage = (int) $request->query('per_page', 10);
+            $perPage = max(1, min($perPage, 50));
+
+            return response()->json(
+                $query->paginate($perPage)->through(fn (Product $p) => $this->productToSummary($p))
+            );
+        }
+
+        return response()->json(
+            $query->get()->map(fn (Product $p) => $this->productToSummary($p))
+        );
     }
 
     public function new(): JsonResponse
     {
         $products = Product::orderBy('created_at', 'desc')->limit(8)->get();
+
         return response()->json($products->map(fn ($p) => [
             'id' => $p->id,
-            'category' => $p->category,
+            'category' => $this->categoryForApi($p->category),
             'name' => $p->name,
             'description' => $p->description,
             'price' => (float) $p->price,
@@ -89,8 +205,8 @@ class ProductController extends Controller
             'description' => 'nullable|string',
             'price' => 'required|numeric|min:0',
             'stock' => 'required|integer|min:0',
-            'imageUrls' => 'nullable|array',
-            'imageUrls.*' => 'string',
+            'imageUrls' => 'nullable|array|max:6',
+            'imageUrls.*' => 'string|max:3000000',
         ]);
         $product = new Product;
         $product->id = Str::uuid()->toString();
@@ -101,9 +217,11 @@ class ProductController extends Controller
         $product->stock = $validated['stock'];
         $product->image_urls = $validated['imageUrls'] ?? ['/placeholder.svg'];
         $product->save();
+        $this->logProductActivity('product_created', $product->id, $product->name);
+
         return response()->json([
             'id' => $product->id,
-            'category' => $product->category,
+            'category' => $this->categoryForApi($product->category),
             'name' => $product->name,
             'description' => $product->description,
             'price' => (float) $product->price,
@@ -119,9 +237,10 @@ class ProductController extends Controller
         if (! $product) {
             return response()->json(['error' => 'Not found'], 404);
         }
+
         return response()->json([
             'id' => $product->id,
-            'category' => $product->category,
+            'category' => $this->categoryForApi($product->category),
             'name' => $product->name,
             'description' => $product->description,
             'price' => (float) $product->price,
@@ -146,8 +265,8 @@ class ProductController extends Controller
             'description' => 'nullable|string',
             'price' => 'required|numeric|min:0',
             'stock' => 'required|integer|min:0',
-            'imageUrls' => 'nullable|array',
-            'imageUrls.*' => 'string',
+            'imageUrls' => 'nullable|array|max:6',
+            'imageUrls.*' => 'string|max:3000000',
         ]);
         $product->update([
             'name' => $validated['name'],
@@ -157,8 +276,12 @@ class ProductController extends Controller
             'stock' => $validated['stock'],
             'image_urls' => $validated['imageUrls'] ?? $product->image_urls,
         ]);
+        $product->refresh();
+        $this->logProductActivity('product_updated', $product->id, $product->name);
+
         return response()->json([
             'id' => $product->id,
+            'category' => $this->categoryForApi($product->category),
             'name' => $product->name,
             'description' => $product->description,
             'price' => (float) $product->price,
@@ -177,7 +300,10 @@ class ProductController extends Controller
         if (! $product) {
             return response()->json(['error' => 'Not found'], 404);
         }
+        $name = $product->name;
         $product->delete();
+        $this->logProductActivity('product_deleted', $id, $name);
+
         return response()->json(['success' => true]);
     }
 }
