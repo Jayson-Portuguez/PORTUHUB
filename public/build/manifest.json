@@ -13,7 +13,7 @@
     ]
   },
   "resources/js/app.js": {
-    "file": "assets/app-FsWWg8i-.js",
+    "file": "assets/app-1yYD39Av.js",
     "name": "app",
     "src": "resources/js/app.js",
     "isEntry": true,
@@ -27,7 +27,7 @@
     ]
   },
   "resources/js/views/AdminActivityView.vue": {
-    "file": "assets/AdminActivityView-6BnaCd9P.js",
+    "file": "assets/AdminActivityView-DmyAnw_G.js",
     "name": "AdminActivityView",
     "src": "resources/js/views/AdminActivityView.vue",
     "isDynamicEntry": true,
@@ -37,7 +37,7 @@
     ]
   },
   "resources/js/views/AdminLandingView.vue": {
-    "file": "assets/AdminLandingView-DmhwkjHe.js",
+    "file": "assets/AdminLandingView-C6hm6V6r.js",
     "name": "AdminLandingView",
     "src": "resources/js/views/AdminLandingView.vue",
     "isDynamicEntry": true,
@@ -46,11 +46,11 @@
       "_auth-DBW8pVSA.js"
     ],
     "css": [
-      "assets/AdminLandingView-2gu424Jo.css"
+      "assets/AdminLandingView-QcKCc12A.css"
     ]
   },
   "resources/js/views/AdminLayout.vue": {
-    "file": "assets/AdminLayout-DQCpBurG.js",
+    "file": "assets/AdminLayout-BLZI-G5W.js",
     "name": "AdminLayout",
     "src": "resources/js/views/AdminLayout.vue",
     "isDynamicEntry": true,
@@ -60,7 +60,7 @@
     ]
   },
   "resources/js/views/AdminProductsView.vue": {
-    "file": "assets/AdminProductsView-DMWDiqrf.js",
+    "file": "assets/AdminProductsView-jGRjBQRD.js",
     "name": "AdminProductsView",
     "src": "resources/js/views/AdminProductsView.vue",
     "isDynamicEntry": true,
@@ -70,7 +70,7 @@
     ]
   },
   "resources/js/views/HomeView.vue": {
-    "file": "assets/HomeView-BTYrjy1T.js",
+    "file": "assets/HomeView-DYNStrk6.js",
     "name": "HomeView",
     "src": "resources/js/views/HomeView.vue",
     "isDynamicEntry": true,
@@ -79,7 +79,7 @@
     ]
   },
   "resources/js/views/ProductsView.vue": {
-    "file": "assets/ProductsView-CtoXXIQQ.js",
+    "file": "assets/ProductsView-DQzglG2e.js",
     "name": "ProductsView",
     "src": "resources/js/views/ProductsView.vue",
     "isDynamicEntry": true,
