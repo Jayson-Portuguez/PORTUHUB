@@ -7,6 +7,8 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class Product extends Model
 {
+    private const PLACEHOLDER_DATA_URI = 'data:image/svg+xml;charset=UTF-8,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%22400%22%20height%3D%22400%22%20viewBox%3D%220%200%20400%20400%22%3E%3Crect%20fill%3D%22%23e5e5e5%22%20width%3D%22400%22%20height%3D%22400%22%2F%3E%3Ctext%20fill%3D%22%23737373%22%20font-family%3D%22system-ui%2Csans-serif%22%20font-size%3D%2218%22%20x%3D%2250%25%22%20y%3D%2250%25%22%20text-anchor%3D%22middle%22%20dy%3D%22.3em%22%3ENo%20image%3C%2Ftext%3E%3C%2Fsvg%3E';
+
     protected $keyType = 'string';
 
     public $incrementing = false;
@@ -34,7 +36,7 @@ class Product extends Model
     {
         $paths = $this->images()->pluck('path')->all();
 
-        return $paths === [] ? ['/placeholder.svg'] : array_values($paths);
+        return $paths === [] ? [self::PLACEHOLDER_DATA_URI] : array_values($paths);
     }
 
     /**
@@ -46,7 +48,7 @@ class Product extends Model
         $this->images()->delete();
         $urls = array_values(array_filter($urls, fn ($u) => is_string($u) && $u !== ''));
         if ($urls === []) {
-            $urls = ['/placeholder.svg'];
+            $urls = [self::PLACEHOLDER_DATA_URI];
         }
         foreach (array_slice($urls, 0, 6) as $i => $url) {
             ProductImage::query()->create([
@@ -61,20 +63,15 @@ class Product extends Model
     {
         $u = trim($u);
         if ($u === '') {
-            return '/placeholder.svg';
+            return self::PLACEHOLDER_DATA_URI;
         }
         if (str_starts_with($u, 'data:')) {
             return $u;
         }
-        $u = str_replace('\\', '/', $u);
-        $u = str_replace('/public/uploads/', '/uploads/', $u);
-        $u = str_replace('public/uploads/', '/uploads/', $u);
         if (str_starts_with($u, 'http://') || str_starts_with($u, 'https://')) {
-            $path = parse_url($u, PHP_URL_PATH);
-
-            return is_string($path) && $path !== '' ? $path : $u;
+            return $u;
         }
 
-        return str_starts_with($u, '/') ? $u : '/'.$u;
+        return self::PLACEHOLDER_DATA_URI;
     }
 }

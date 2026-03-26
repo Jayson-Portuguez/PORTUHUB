@@ -5,7 +5,6 @@ namespace App\Http\Controllers\Api;
 use App\Http\Controllers\Controller;
 use App\Models\AdminActivityLog;
 use App\Models\Product;
-use App\Support\StoredImageForApi;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
@@ -22,9 +21,14 @@ class ProductController extends Controller
             if (! is_string($u) || $u === '') {
                 return null;
             }
-            $resolved = StoredImageForApi::resolve($u);
+            if (str_starts_with($u, 'data:')) {
+                return $u;
+            }
+            if (str_starts_with($u, 'http://') || str_starts_with($u, 'https://')) {
+                return $u;
+            }
 
-            return $resolved ?? null;
+            return Product::normalizeStoredImagePath($u);
         }, $urls)));
     }
 
@@ -183,7 +187,7 @@ class ProductController extends Controller
         $product->price = $validated['price'];
         $product->stock = $validated['stock'];
         $product->save();
-        $this->syncProductImages($product, $validated['imageUrls'] ?? ['/placeholder.svg']);
+        $this->syncProductImages($product, $validated['imageUrls'] ?? []);
         $product->load('images');
         $this->logProductActivity('product_created', $product->id, $product->name);
 
