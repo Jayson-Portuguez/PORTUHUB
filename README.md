@@ -73,14 +73,14 @@ This repo includes a [Render Blueprint](https://render.com/docs/blueprint-spec) 
 - Local Docker Compose still uses MySQL; Render uses Postgres (`DB_CONNECTION=pgsql`).
 - Optional: deploy manually as **Web Service → Docker** with root `Dockerfile` and the same env vars as in `render.yaml`.
 
-**Troubleshooting: `Connection refused` to `mysql` @ `127.0.0.1`**
+**Troubleshooting: database connection errors on Render**
 
-The web service is using local MySQL settings instead of Render Postgres. In the Render dashboard → your service → **Environment**:
+| Error | Fix |
+|-------|-----|
+| `mysql` @ `127.0.0.1:3306` | Remove local MySQL env vars; link Postgres; set `DB_CONNECTION=pgsql`. |
+| `pgsql` @ `127.0.0.1:5432` | Postgres is **not linked**. `DB_HOST` must be Render’s internal host (`dpg-…`), not `127.0.0.1`. |
+| `DATABASE_URL is not set` | Link the database or set `DB_HOST` + credentials from the Postgres dashboard. |
 
-1. Link the **Postgres** database (or set `DB_URL` from the DB’s **Internal Connection String**).
-2. Set `DB_CONNECTION` = `pgsql` (remove any `DB_HOST`, `DB_PORT`, `DB_DATABASE`, `DB_USERNAME`, `DB_PASSWORD` copied from local `.env`).
-3. Redeploy after pushing the latest code (startup script removes `.env` on Render).
+In **Environment** → **Add from database** → select your Postgres instance. That injects `DB_HOST`, `DB_PORT`, `DB_DATABASE`, `DB_USERNAME`, `DB_PASSWORD`. Then redeploy.
 
-Required env vars: `DB_CONNECTION=pgsql`, `DB_URL` (from linked Postgres — Internal Database URL), `APP_KEY`, `ADMIN_USERNAME`, `ADMIN_PASSWORD`.
-
-If deploy fails with **DATABASE_URL is not set**: the blueprint provides `DB_URL`; link the Postgres instance to the web service under **Environment → Add from database**.
+Required: `DB_CONNECTION=pgsql`, linked Postgres vars, `APP_KEY`, `ADMIN_USERNAME`, `ADMIN_PASSWORD`.

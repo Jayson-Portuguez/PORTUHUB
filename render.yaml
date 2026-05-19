@@ -25,6 +25,29 @@ services:
         generateValue: true
       - key: DB_CONNECTION
         value: pgsql
+      # Discrete vars are more reliable than connectionString alone in Docker.
+      - key: DB_HOST
+        fromDatabase:
+          name: portuhub-db
+          property: host
+      - key: DB_PORT
+        fromDatabase:
+          name: portuhub-db
+          property: port
+      - key: DB_DATABASE
+        fromDatabase:
+          name: portuhub-db
+          property: database
+      - key: DB_USERNAME
+        fromDatabase:
+          name: portuhub-db
+          property: user
+      - key: DB_PASSWORD
+        fromDatabase:
+          name: portuhub-db
+          property: password
+      - key: DB_SSLMODE
+        value: require
       - key: DB_URL
         fromDatabase:
           name: portuhub-db

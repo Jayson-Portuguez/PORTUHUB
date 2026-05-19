@@ -8,23 +8,54 @@ if [ -n "${RENDER:-}" ] || [ -n "${RENDER_SERVICE_ID:-}" ]; then
   on_render=true
 fi
 
-# Never use a local .env on Render — it overrides platform env vars (e.g. mysql @ 127.0.0.1).
-if $on_render || [ -n "${DATABASE_URL:-}" ] || [ -n "${DB_URL:-}" ]; then
+# Never use a local .env on Render — it overrides platform env vars.
+if $on_render || [ -n "${DATABASE_URL:-}" ] || [ -n "${DB_URL:-}" ] || [ -n "${DB_HOST:-}" ]; then
   rm -f .env .env.local .env.production
 fi
 
-# Render Postgres: blueprint sets DB_URL; some setups use DATABASE_URL instead.
 if [ -n "${DATABASE_URL:-}" ] && [ -z "${DB_URL:-}" ]; then
   export DB_URL="${DATABASE_URL}"
 fi
 
-if [ -n "${DB_URL:-}" ]; then
-  export DB_CONNECTION="${DB_CONNECTION:-pgsql}"
+# Map Render Postgres standard vars when linking a database in the dashboard.
+if [ -z "${DB_HOST:-}" ] && [ -n "${PGHOST:-}" ]; then
+  export DB_HOST="${PGHOST}"
+  export DB_PORT="${PGPORT:-5432}"
+  export DB_DATABASE="${PGDATABASE:-${DB_DATABASE:-}}"
+  export DB_USERNAME="${PGUSER:-${DB_USERNAME:-}}"
+  export DB_PASSWORD="${PGPASSWORD:-${DB_PASSWORD:-}}"
+fi
+
+export DB_CONNECTION="${DB_CONNECTION:-pgsql}"
+
+# Prefer discrete host/port from a linked database; avoid empty DB_URL forcing 127.0.0.1.
+if [ -n "${DB_HOST:-}" ] && [ "${DB_HOST}" != "127.0.0.1" ] && [ "${DB_HOST}" != "localhost" ]; then
+  export DB_PORT="${DB_PORT:-5432}"
+  export DB_SSLMODE="${DB_SSLMODE:-require}"
+  unset DB_URL DATABASE_URL || true
+elif [ -n "${DB_URL:-}" ]; then
   unset DB_HOST DB_PORT DB_DATABASE DB_USERNAME DB_PASSWORD DB_SOCKET || true
 elif $on_render; then
-  echo "ERROR: DB_URL is not set. Link a Render Postgres database to this service," >&2
-  echo "       or add DB_URL (Internal Database URL) and DB_CONNECTION=pgsql in Environment." >&2
+  echo "ERROR: Postgres is not configured for this service." >&2
+  echo "  Render → Environment → Link your Postgres database (use Internal connection)," >&2
+  echo "  or set DB_HOST, DB_PORT, DB_DATABASE, DB_USERNAME, DB_PASSWORD." >&2
   exit 1
+fi
+
+if $on_render; then
+  php -r '
+    $url = getenv("DB_URL") ?: "";
+    $host = getenv("DB_HOST") ?: "";
+    if ($url !== "") {
+      $p = parse_url($url);
+      $host = $p["host"] ?? $host;
+    }
+    if ($host === "" || $host === "127.0.0.1" || $host === "localhost") {
+      fwrite(STDERR, "ERROR: Database host is \"$host\". Link Postgres to this web service and redeploy.\n");
+      exit(1);
+    }
+    fwrite(STDERR, "INFO: Database host: $host\n");
+  '
 fi
 
 if [ -n "${RENDER_EXTERNAL_URL:-}" ]; then
