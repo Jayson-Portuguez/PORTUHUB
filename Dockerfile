@@ -16,6 +16,8 @@ WORKDIR /var/www/html
 
 COPY . .
 
+RUN rm -f .env .env.local .env.production
+
 RUN composer install --no-dev --optimize-autoloader --no-interaction \
     && npm ci \
     && npm run build \
