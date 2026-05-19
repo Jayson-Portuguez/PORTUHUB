@@ -1,0 +1,27 @@
+services:
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: portuhub_app
+    working_dir: /var/www/html
+    volumes:
+      - ./:/var/www/html
+    ports:
+      - "8000:8000"
+    command: bash -lc "composer install && [ -f .env ] || cp .env.example .env && php artisan key:generate --force && mkdir -p database && touch database/database.sqlite && php artisan migrate --seed --force && php artisan storage:link && php artisan serve --host=0.0.0.0 --port=8000"
+    depends_on:
+      - node
+
+  node:
+    image: node:20
+    container_name: portuhub_node
+    working_dir: /var/www/html
+    volumes:
+      - ./:/var/www/html
+    ports:
+      - "5173:5173"
+    environment:
+      CHOKIDAR_USEPOLLING: "true"
+      NODE_ENV: development
+    command: bash -lc "[ -d node_modules ] || npm ci && npm run dev -- --host 0.0.0.0 --port 5173"
