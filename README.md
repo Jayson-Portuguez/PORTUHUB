@@ -53,3 +53,22 @@ E-commerce app with admin auth and product CRUD. Built with **Laravel 12**, **Vu
 - `/` – Home (new arrivals)
 - `/products` – Product list
 - `/admin` – Admin login and product management
+
+## Deploy on Render
+
+This repo includes a [Render Blueprint](https://render.com/docs/blueprint-spec) (`render.yaml`) that provisions a **Web Service** (Docker) and a **PostgreSQL** database.
+
+1. Push the repo to GitHub/GitLab.
+2. In [Render Dashboard](https://dashboard.render.com/) → **New** → **Blueprint**, connect the repo and apply `render.yaml`.
+3. When prompted, set secrets:
+   - `ADMIN_USERNAME` – admin login name
+   - `ADMIN_PASSWORD` – admin password
+4. Wait for the first deploy (build runs `composer install`, `npm run build`, then migrations + seed on start).
+5. Open the service URL (e.g. `https://portuhub.onrender.com`). Health check: `/up`.
+
+**Notes**
+
+- Render free web services spin down after inactivity; the first request may take ~30s.
+- Production uses built Vite assets (`public/build`); no separate Vite process on Render.
+- Local Docker Compose still uses MySQL; Render uses Postgres (`DB_CONNECTION=pgsql`).
+- Optional: deploy manually as **Web Service → Docker** with root `Dockerfile` and the same env vars as in `render.yaml`.
