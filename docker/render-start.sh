@@ -3,18 +3,27 @@ set -euo pipefail
 
 cd /var/www/html
 
+on_render=false
+if [ -n "${RENDER:-}" ] || [ -n "${RENDER_SERVICE_ID:-}" ]; then
+  on_render=true
+fi
+
 # Never use a local .env on Render — it overrides platform env vars (e.g. mysql @ 127.0.0.1).
-if [ -n "${RENDER:-}" ] || [ -n "${RENDER_SERVICE_ID:-}" ] || [ -n "${DATABASE_URL:-}" ]; then
+if $on_render || [ -n "${DATABASE_URL:-}" ] || [ -n "${DB_URL:-}" ]; then
   rm -f .env .env.local .env.production
 fi
 
-# Render Postgres: DATABASE_URL → Laravel DB_URL + pgsql driver.
-if [ -n "${DATABASE_URL:-}" ]; then
+# Render Postgres: blueprint sets DB_URL; some setups use DATABASE_URL instead.
+if [ -n "${DATABASE_URL:-}" ] && [ -z "${DB_URL:-}" ]; then
   export DB_URL="${DATABASE_URL}"
-  export DB_CONNECTION=pgsql
+fi
+
+if [ -n "${DB_URL:-}" ]; then
+  export DB_CONNECTION="${DB_CONNECTION:-pgsql}"
   unset DB_HOST DB_PORT DB_DATABASE DB_USERNAME DB_PASSWORD DB_SOCKET || true
-elif [ -n "${RENDER:-}" ] || [ -n "${RENDER_SERVICE_ID:-}" ]; then
-  echo "ERROR: DATABASE_URL is not set. Link a Render Postgres database or set DB_URL + DB_CONNECTION=pgsql." >&2
+elif $on_render; then
+  echo "ERROR: DB_URL is not set. Link a Render Postgres database to this service," >&2
+  echo "       or add DB_URL (Internal Database URL) and DB_CONNECTION=pgsql in Environment." >&2
   exit 1
 fi
 

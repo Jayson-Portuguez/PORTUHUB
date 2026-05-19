@@ -81,4 +81,6 @@ The web service is using local MySQL settings instead of Render Postgres. In the
 2. Set `DB_CONNECTION` = `pgsql` (remove any `DB_HOST`, `DB_PORT`, `DB_DATABASE`, `DB_USERNAME`, `DB_PASSWORD` copied from local `.env`).
 3. Redeploy after pushing the latest code (startup script removes `.env` on Render).
 
-Required env vars: `DB_CONNECTION=pgsql`, `DB_URL` (from linked database), `APP_KEY`, `ADMIN_USERNAME`, `ADMIN_PASSWORD`.
+Required env vars: `DB_CONNECTION=pgsql`, `DB_URL` (from linked Postgres — Internal Database URL), `APP_KEY`, `ADMIN_USERNAME`, `ADMIN_PASSWORD`.
+
+If deploy fails with **DATABASE_URL is not set**: the blueprint provides `DB_URL`; link the Postgres instance to the web service under **Environment → Add from database**.
